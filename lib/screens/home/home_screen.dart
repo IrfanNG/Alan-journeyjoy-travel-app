@@ -24,12 +24,40 @@ class HomeScreen extends StatelessWidget {
             final trips = tripProvider.trips;
             final featured = trips.isNotEmpty ? trips.first : null;
             return SingleChildScrollView(
-              child: Column(
+              child: Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  _buildHeader(context),
-                  _buildFeaturedCard(context, featured, trips.isNotEmpty),
-                  _buildModuleGrid(context, trips.isNotEmpty),
-                  const SizedBox(height: 32),
+                  Column(
+                    children: [
+                      _buildHeader(context),
+                      ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(32),
+                          topRight: Radius.circular(32),
+                        ),
+                        child: Container(
+                          color: const Color(0xFFF8F7FF),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 160),
+                              _buildModuleGrid(context, trips.isNotEmpty),
+                              const SizedBox(height: 48),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Positioned(
+                    top: 135,
+                    left: 24,
+                    right: 24,
+                    child: _buildFeaturedCard(
+                      context,
+                      featured,
+                      trips.isNotEmpty,
+                    ),
+                  ),
                 ],
               ),
             );
@@ -40,20 +68,14 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final headerHeight = screenHeight * 0.35;
     return Container(
       width: double.infinity,
-      height: headerHeight,
+      height: 180,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Color(0xFF32158F), Color(0xFF6A35F4)],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
         ),
       ),
       child: Padding(
@@ -80,12 +102,15 @@ class HomeScreen extends StatelessWidget {
                     color: Colors.white.withAlpha(25),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.notifications_outlined,
-                      color: Colors.white, size: 22),
+                  child: const Icon(
+                    Icons.notifications_outlined,
+                    color: Colors.white,
+                    size: 22,
+                  ),
                 ),
               ],
             ),
-            const Spacer(),
+            const SizedBox(height: 24),
             Text(
               _greeting(),
               style: const TextStyle(
@@ -102,159 +127,173 @@ class HomeScreen extends StatelessWidget {
                 color: Colors.white.withAlpha(180),
               ),
             ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFeaturedCard(
-      BuildContext context, dynamic trip, bool hasTrips) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(24, -45, 24, 16),
+  Widget _buildFeaturedCard(BuildContext context, dynamic trip, bool hasTrips) {
+    return SizedBox(
       height: 160,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF5B2BEA).withAlpha(40),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF7A5AF5),
-                Color(0xFF5B2BEA),
-                Color(0xFF32158F),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x335B2BEA),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF7A5AF5),
+                  Color(0xFF5B2BEA),
+                  Color(0xFF32158F),
+                ],
+              ),
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: -10,
+                  right: -10,
+                  child: CustomPaint(
+                    size: const Size(100, 100),
+                    painter: _CardDecorPainter(),
+                  ),
+                ),
+                Positioned(
+                  bottom: 20,
+                  left: 20,
+                  child: Icon(
+                    Icons.terrain,
+                    size: 40,
+                    color: Colors.white.withAlpha(15),
+                  ),
+                ),
+                Positioned(
+                  bottom: 40,
+                  right: 30,
+                  child: Icon(
+                    Icons.flight,
+                    size: 24,
+                    color: Colors.white.withAlpha(20),
+                  ),
+                ),
+                Positioned(
+                  top: 14,
+                  right: 14,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(25),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.favorite_border,
+                      color: Colors.white.withAlpha(180),
+                      size: 16,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(25),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              hasTrips
+                                  ? Icons.flight_takeoff
+                                  : Icons.add_location_alt,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  hasTrips ? trip.name : 'Plan Your First Trip',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  hasTrips
+                                      ? DateFormat(
+                                          'MMM dd, yyyy',
+                                        ).format(trip.createdAt)
+                                      : 'Create your adventure',
+                                  style: TextStyle(
+                                    color: Colors.white.withAlpha(180),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            hasTrips ? '71% Planned' : '0% Planned',
+                            style: TextStyle(
+                              color: Colors.white.withAlpha(200),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Icon(
+                            Icons.more_horiz,
+                            color: Colors.white.withAlpha(150),
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: hasTrips ? 0.71 : 0,
+                          backgroundColor: Colors.white.withAlpha(30),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFF58C783),
+                          ),
+                          minHeight: 5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: -10,
-                right: -10,
-                child: CustomPaint(
-                  size: const Size(100, 100),
-                  painter: _CardDecorPainter(),
-                ),
-              ),
-              Positioned(
-                bottom: 20,
-                left: 20,
-                child: Icon(Icons.terrain,
-                    size: 40, color: Colors.white.withAlpha(15)),
-              ),
-              Positioned(
-                bottom: 40,
-                right: 30,
-                child: Icon(Icons.flight,
-                    size: 24, color: Colors.white.withAlpha(20)),
-              ),
-              Positioned(
-                top: 14,
-                right: 14,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(25),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.favorite_border,
-                      color: Colors.white.withAlpha(180), size: 16),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(25),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            hasTrips
-                                ? Icons.flight_takeoff
-                                : Icons.add_location_alt,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                hasTrips ? trip.name : 'Plan Your First Trip',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                hasTrips
-                                    ? DateFormat('MMM dd, yyyy')
-                                        .format(trip.createdAt)
-                                    : 'Create your adventure',
-                                style: TextStyle(
-                                    color: Colors.white.withAlpha(180),
-                                    fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          hasTrips ? '71% Planned' : '0% Planned',
-                          style: TextStyle(
-                            color: Colors.white.withAlpha(200),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Icon(Icons.more_horiz,
-                            color: Colors.white.withAlpha(150), size: 18),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: hasTrips ? 0.71 : 0,
-                        backgroundColor: Colors.white.withAlpha(30),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFF58C783)),
-                        minHeight: 5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ),
         ),
       ),
@@ -321,8 +360,8 @@ class HomeScreen extends StatelessWidget {
                   () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                          content:
-                              Text('Document Hub coming later')),
+                        content: Text('Document Hub coming later'),
+                      ),
                     );
                   },
                 ),
@@ -346,7 +385,11 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _circleModule(
-      BuildContext context, IconData icon, String label, VoidCallback? onTap) {
+    BuildContext context,
+    IconData icon,
+    String label,
+    VoidCallback? onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -358,11 +401,11 @@ class HomeScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
-                  color: const Color(0xFF5B2BEA).withAlpha(15),
+                  color: Color(0x155B2BEA),
                   blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
@@ -383,12 +426,11 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  void _navigateTripModule(
-      BuildContext context, bool hasTrips, String module) {
+  void _navigateTripModule(BuildContext context, bool hasTrips, String module) {
     if (!hasTrips) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Create a trip first')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Create a trip first')));
       return;
     }
     final route = {
