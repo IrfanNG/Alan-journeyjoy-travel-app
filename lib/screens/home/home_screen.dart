@@ -17,6 +17,11 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pt = MediaQuery.of(context).padding.top;
+    const headerHeight = 260.0;
+    const cardHeight = 160.0;
+    final cardTop = headerHeight - 120;
+    final bodyTop = headerHeight - 72;
+    final gridTop = cardTop + cardHeight + 45;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F7FF),
       body: Consumer<TripProvider>(
@@ -25,7 +30,6 @@ class HomeScreen extends StatelessWidget {
           final featured = trips.isNotEmpty ? trips.first : null;
           final screenHeight =
               MediaQuery.of(context).size.height -
-              MediaQuery.of(context).padding.top -
               MediaQuery.of(context).padding.bottom;
           final contentHeight = screenHeight < 760 ? 760.0 : screenHeight;
 
@@ -39,26 +43,21 @@ class HomeScreen extends StatelessWidget {
                     top: 0,
                     left: 0,
                     right: 0,
-                    height: 220 + pt,
+                    height: headerHeight,
                     child: _buildHeader(context, topPadding: pt),
                   ),
                   Positioned(
-                    top: 170 + pt,
+                    top: bodyTop,
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF8F7FF),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(38),
-                          topRight: Radius.circular(38),
-                        ),
-                      ),
+                    child: ClipPath(
+                      clipper: const _HomeWhiteBodyClipper(),
+                      child: Container(color: const Color(0xFFF8F7FF)),
                     ),
                   ),
                   Positioned(
-                    top: 135 + pt,
+                    top: cardTop,
                     left: 24,
                     right: 24,
                     child: _buildFeaturedCard(
@@ -68,7 +67,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    top: 340 + pt,
+                    top: gridTop,
                     left: 0,
                     right: 0,
                     child: _buildModuleGrid(context, trips.isNotEmpty),
@@ -481,4 +480,23 @@ class _CardDecorPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _HomeWhiteBodyClipper extends CustomClipper<Path> {
+  const _HomeWhiteBodyClipper();
+
+  @override
+  Path getClip(Size size) {
+    final path = Path()
+      ..moveTo(0, 45)
+      ..quadraticBezierTo(size.width * 0.16, 0, size.width * 0.34, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldDelegate) => false;
 }

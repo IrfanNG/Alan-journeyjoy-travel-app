@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
 import '../../providers/activity_provider.dart';
-import '../../providers/expense_provider.dart';
 import '../../providers/flight_provider.dart';
 import '../../providers/packing_provider.dart';
 import '../../providers/trip_provider.dart';
@@ -21,19 +20,26 @@ class TripDetailScreen extends StatelessWidget {
 
     if (trip == null) {
       return Scaffold(
+        backgroundColor: JJColors.lightBg,
         body: SafeArea(
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.search_off,
-                    size: 64, color: JJColors.primaryPurple.withAlpha(80)),
+                Icon(
+                  Icons.search_off,
+                  size: 64,
+                  color: JJColors.primaryPurple.withAlpha(80),
+                ),
                 const SizedBox(height: 16),
-                const Text('Trip not found',
-                    style: TextStyle(
-                        fontSize: 18,
-                        color: JJColors.textDark,
-                        fontWeight: FontWeight.w600)),
+                const Text(
+                  'Trip not found',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: JJColors.textDark,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -41,12 +47,10 @@ class TripDetailScreen extends StatelessWidget {
       );
     }
 
-    final expenseProvider = context.watch<ExpenseProvider>();
     final activityProvider = context.watch<ActivityProvider>();
     final flightProvider = context.watch<FlightProvider>();
     final packingProvider = context.watch<PackingProvider>();
 
-    final totalSpent = expenseProvider.getTotalForTrip(tripId);
     final tripActivities = activityProvider.getActivitiesForTrip(tripId);
     final tripFlights = flightProvider.getFlightsForTrip(tripId);
     final tripItems = packingProvider.getItemsForTrip(tripId);
@@ -56,277 +60,314 @@ class TripDetailScreen extends StatelessWidget {
     final color = Color(int.parse('FF$colorHex', radix: 16));
 
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                height: 220,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: 220,
+      backgroundColor: JJColors.lightBg,
+      body: Stack(
+        children: [
+          SizedBox(
+            height: 250,
+            width: double.infinity,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color, color.withAlpha(180), JJColors.deepPurple],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: CustomPaint(
+                painter: _HeroDecorPainter(color: color),
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            color,
-                            color.withAlpha(180),
-                            JJColors.deepPurple,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(40),
-                          bottomRight: Radius.circular(40),
-                        ),
+                        color: Colors.white.withAlpha(30),
+                        shape: BoxShape.circle,
                       ),
-                      child: Stack(
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(30),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.edit_outlined,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned.fill(
+            top: 215,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: JJColors.lightBg,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 22),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Positioned(
-                            top: 60,
-                            left: 30,
-                            child: Icon(Icons.terrain,
-                                size: 40,
-                                color: Colors.white.withAlpha(30)),
-                          ),
-                          Positioned(
-                            top: 80,
-                            right: 40,
-                            child: Icon(Icons.flight,
-                                size: 32,
-                                color: Colors.white.withAlpha(50)),
-                          ),
-                          Positioned(
-                            top: 100,
-                            left: 80,
-                            child: Icon(Icons.wb_sunny,
-                                size: 28,
-                                color: Colors.white.withAlpha(35)),
-                          ),
-                          Positioned(
-                            bottom: 50,
-                            right: 60,
-                            child: Icon(Icons.location_city,
-                                size: 36,
-                                color: Colors.white.withAlpha(25)),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                            child: Row(
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                GestureDetector(
-                                  onTap: () => Navigator.pop(context),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withAlpha(25),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(Icons.arrow_back,
-                                        color: Colors.white, size: 20),
+                                Text(
+                                  trip.name,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w800,
+                                    color: JJColors.textDark,
                                   ),
                                 ),
-                                const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withAlpha(25),
-                                    borderRadius: BorderRadius.circular(12),
+                                const SizedBox(height: 4),
+                                Text(
+                                  DateFormat(
+                                    'MMM dd, yyyy',
+                                  ).format(trip.createdAt),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: JJColors.textMuted,
                                   ),
-                                  child: const Icon(Icons.more_horiz,
-                                      color: Colors.white, size: 20),
                                 ),
                               ],
                             ),
                           ),
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: JJColors.primaryPurple.withAlpha(20),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.ios_share,
+                              color: JJColors.primaryPurple,
+                              size: 20,
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    Positioned(
-                      bottom: -44,
-                      left: 24,
-                      right: 24,
+                    const SizedBox(height: 24),
+                    _buildQuickActions(context, trip.id),
+                    const SizedBox(height: 28),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "What's Next?",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: JJColors.textDark,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Container(
-                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: JJColors.cardBg,
-                          borderRadius: BorderRadius.circular(24),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withAlpha(13),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
+                              color: JJColors.primaryPurple.withAlpha(12),
+                              blurRadius: 20,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
-                        child: Row(
+                        child: Column(
                           children: [
-                            Container(
-                              width: 52,
-                              height: 52,
-                              decoration: BoxDecoration(
-                                color: color.withAlpha(25),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(Icons.flight_takeoff,
-                                  color: color, size: 26),
+                            _buildListRow(
+                              context,
+                              icon: Icons.flight_outlined,
+                              label: 'Flights',
+                              trailing:
+                                  '${tripFlights.length} flight${tripFlights.length == 1 ? '' : 's'}',
+                              onTap: tripFlights.isNotEmpty
+                                  ? () => Navigator.pushNamed(
+                                      context,
+                                      '/flights',
+                                      arguments: trip.id,
+                                    )
+                                  : null,
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    trip.name,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: JJColors.textDark,
-                                    ),
+                            const Divider(height: 1, indent: 60),
+                            _buildListRow(
+                              context,
+                              icon: Icons.calendar_month_outlined,
+                              label: 'Activities',
+                              trailing:
+                                  '${tripActivities.length} activity${tripActivities.length == 1 ? '' : 'ies'}',
+                              onTap: tripActivities.isNotEmpty
+                                  ? () => Navigator.pushNamed(
+                                      context,
+                                      '/activities',
+                                      arguments: trip.id,
+                                    )
+                                  : null,
+                            ),
+                            const Divider(height: 1, indent: 60),
+                            _buildListRow(
+                              context,
+                              icon: Icons.checklist_outlined,
+                              label: 'Packing List',
+                              trailing: tripItems.isNotEmpty
+                                  ? '$packedCount/${tripItems.length}'
+                                  : '0',
+                              onTap: tripItems.isNotEmpty
+                                  ? () => Navigator.pushNamed(
+                                      context,
+                                      '/packing',
+                                      arguments: trip.id,
+                                    )
+                                  : null,
+                            ),
+                            const Divider(height: 1, indent: 60),
+                            _buildListRow(
+                              context,
+                              icon: Icons.description_outlined,
+                              label: 'Documents',
+                              trailing: null,
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Document Hub coming later'),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    DateFormat('MMM dd, yyyy')
-                                        .format(trip.createdAt),
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: JJColors.textMuted,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                );
+                              },
                             ),
                           ],
                         ),
                       ),
                     ),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
-              const SizedBox(height: 60),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _statBox(
-                        Icons.monetization_on_outlined,
-                        '\$${totalSpent.toStringAsFixed(0)}',
-                        'Spent',
-                        JJColors.warningOrange),
-                    _statBox(Icons.explore_outlined, '${tripActivities.length}',
-                        'Activities', JJColors.successGreen),
-                    _statBox(
-                        Icons.checklist_outlined,
-                        '$packedCount/${tripItems.length}',
-                        'Packed',
-                        JJColors.primaryPurple),
-                    _statBox(Icons.flight_outlined, '${tripFlights.length}',
-                        'Flights', const Color(0xFF3B82F6)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "What's Next?",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: JJColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 100,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          _quickActionTile(
-                              context,
-                              'Expense',
-                              Icons.monetization_on_outlined,
-                              JJColors.warningOrange,
-                              '/expenses',
-                              trip.id),
-                          const SizedBox(width: 12),
-                          _quickActionTile(
-                              context,
-                              'Flight',
-                              Icons.flight_outlined,
-                              const Color(0xFF3B82F6),
-                              '/flights',
-                              trip.id),
-                          const SizedBox(width: 12),
-                          _quickActionTile(
-                              context,
-                              'Activity',
-                              Icons.explore_outlined,
-                              JJColors.successGreen,
-                              '/activities',
-                              trip.id),
-                          const SizedBox(width: 12),
-                          _quickActionTile(
-                              context,
-                              'Packing',
-                              Icons.checklist_outlined,
-                              JJColors.primaryPurple,
-                              '/packing',
-                              trip.id),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _statBox(IconData icon, String value, String label, Color color) {
-    return Container(
-      width: 74,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
-        color: JJColors.cardBg,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: color.withAlpha(20),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+  Widget _buildQuickActions(BuildContext context, String tripId) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _actionChip(
+            context,
+            icon: Icons.explore_outlined,
+            label: 'Plan',
+            isActive: true,
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Plan feature coming soon')),
+              );
+            },
+          ),
+          _actionChip(
+            context,
+            icon: Icons.route_outlined,
+            label: 'Itinerary',
+            isActive: false,
+            onTap: () =>
+                Navigator.pushNamed(context, '/activities', arguments: tripId),
+          ),
+          _actionChip(
+            context,
+            icon: Icons.account_balance_wallet_outlined,
+            label: 'Expenses',
+            isActive: false,
+            onTap: () =>
+                Navigator.pushNamed(context, '/expenses', arguments: tripId),
+          ),
+          _actionChip(
+            context,
+            icon: Icons.note_alt_outlined,
+            label: 'Notes',
+            isActive: false,
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Notes coming later')),
+              );
+            },
           ),
         ],
       ),
+    );
+  }
+
+  Widget _actionChip(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 22, color: color),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: isActive
+                  ? JJColors.primaryPurple
+                  : JJColors.primaryPurple.withAlpha(16),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(
+              icon,
+              color: isActive ? Colors.white : JJColors.primaryPurple,
+              size: 26,
             ),
           ),
+          const SizedBox(height: 8),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 10,
-              color: JJColors.textMuted,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isActive ? JJColors.primaryPurple : JJColors.textMuted,
             ),
           ),
         ],
@@ -334,43 +375,63 @@ class TripDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _quickActionTile(BuildContext context, String label, IconData icon,
-      Color color, String route, String tripId) {
-    return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, route, arguments: tripId),
-      child: Container(
-        width: 90,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: JJColors.cardBg,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: JJColors.primaryPurple.withAlpha(12),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildListRow(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    String? trailing,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                color: color.withAlpha(20),
-                borderRadius: BorderRadius.circular(16),
+                color: JJColors.primaryPurple.withAlpha(16),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: JJColors.primaryPurple, size: 20),
             ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: JJColors.textDark,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: JJColors.textDark,
+                ),
+              ),
+            ),
+            if (trailing != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Text(
+                  trailing,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: JJColors.primaryPurple,
+                  ),
+                ),
+              ),
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: JJColors.primaryPurple.withAlpha(20),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.chevron_right,
+                color: JJColors.primaryPurple.withAlpha(120),
+                size: 16,
               ),
             ),
           ],
@@ -378,4 +439,107 @@ class TripDetailScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HeroDecorPainter extends CustomPainter {
+  final Color color;
+
+  _HeroDecorPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withAlpha(10)
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(0, size.height * 0.72)
+      ..quadraticBezierTo(
+        size.width * 0.18,
+        size.height * 0.58,
+        size.width * 0.28,
+        size.height * 0.52,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.38,
+        size.height * 0.46,
+        size.width * 0.42,
+        size.height * 0.50,
+      )
+      ..lineTo(size.width * 0.42, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(path, paint);
+
+    final path2 = Path()
+      ..moveTo(size.width * 0.15, size.height * 0.78)
+      ..quadraticBezierTo(
+        size.width * 0.35,
+        size.height * 0.62,
+        size.width * 0.50,
+        size.height * 0.56,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.65,
+        size.height * 0.48,
+        size.width * 0.78,
+        size.height * 0.54,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.90,
+        size.height * 0.58,
+        size.width,
+        size.height * 0.50,
+      )
+      ..lineTo(size.width, size.height)
+      ..lineTo(size.width * 0.15, size.height)
+      ..close();
+    canvas.drawPath(path2, paint);
+
+    final paint3 = Paint()
+      ..color = Colors.white.withAlpha(20)
+      ..style = PaintingStyle.fill;
+
+    final sunPath = Path()
+      ..addOval(
+        Rect.fromCircle(
+          center: Offset(size.width * 0.78, size.height * 0.35),
+          radius: 28,
+        ),
+      );
+    canvas.drawPath(sunPath, paint3);
+
+    final paint4 = Paint()
+      ..color = Colors.white.withAlpha(8)
+      ..style = PaintingStyle.fill;
+
+    final cloudPath = Path()
+      ..moveTo(size.width * 0.15, size.height * 0.42)
+      ..quadraticBezierTo(
+        size.width * 0.18,
+        size.height * 0.36,
+        size.width * 0.25,
+        size.height * 0.38,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.28,
+        size.height * 0.32,
+        size.width * 0.35,
+        size.height * 0.35,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.40,
+        size.height * 0.30,
+        size.width * 0.45,
+        size.height * 0.34,
+      )
+      ..lineTo(size.width * 0.45, size.height * 0.45)
+      ..lineTo(size.width * 0.15, size.height * 0.45)
+      ..close();
+    canvas.drawPath(cloudPath, paint4);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HeroDecorPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
