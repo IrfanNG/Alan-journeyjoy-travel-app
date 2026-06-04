@@ -27,13 +27,10 @@ class _PackingScreenState extends State<PackingScreen> {
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments;
-    final String tripId;
-    if (args is String) {
-      tripId = args;
-    } else {
-      final tp = context.read<TripProvider>();
-      tripId = tp.trips.isNotEmpty ? tp.trips.first.id : '';
-    }
+    final tp = context.watch<TripProvider>();
+    final tripId = args is String
+        ? args
+        : (tp.trips.isNotEmpty ? tp.trips.first.id : '');
     final packingProvider = context.watch<PackingProvider>();
     final tripItems = packingProvider.getItemsForTrip(tripId);
     final total = tripItems.length;
@@ -287,22 +284,37 @@ class _PackingScreenState extends State<PackingScreen> {
         onTabTap: (tab) {
           switch (tab) {
             case JJBottomNavTab.home:
+              Navigator.pushReplacementNamed(context, '/home');
+              break;
             case JJBottomNavTab.trips:
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/home',
-                (_) => false,
-              );
+              if (tripId.isNotEmpty) {
+                Navigator.pushReplacementNamed(
+                  context,
+                  '/trip-detail',
+                  arguments: tripId,
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Create a trip first')),
+                );
+              }
+              break;
             case JJBottomNavTab.expenses:
               if (tripId.isNotEmpty) {
-                Navigator.pushNamed(
+                Navigator.pushReplacementNamed(
                   context,
                   '/expenses',
                   arguments: tripId,
                 );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Create a trip first')),
+                );
               }
+              break;
             case JJBottomNavTab.more:
-              Navigator.pushNamed(context, '/settings');
+              Navigator.pushReplacementNamed(context, '/settings');
+              break;
           }
         },
       ),

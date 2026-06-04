@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../app/theme.dart';
 import '../../core/widgets/jj_bottom_nav.dart';
 import '../../data/models/trip_model.dart';
 import '../../providers/trip_provider.dart';
+
+Color _parseTripColor(String hex) {
+  final cleaned = hex.trim().replaceFirst('#', '');
+  final c = cleaned.length == 6 ? int.tryParse('0xFF$cleaned') : null;
+  if (c == null) return JJColors.primaryPurple;
+  return Color(c);
+}
+
+List<Color> _featuredCardGradient(String colorHex) {
+  final base = _parseTripColor(colorHex);
+  final dark = Color.lerp(base, Colors.black, 0.35)!;
+  final light = Color.lerp(base, Colors.white, 0.18)!;
+  return [light, base, dark];
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -74,21 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     left: 24,
                     right: 24,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(25),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.menu,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
                         Container(
                           width: 40,
                           height: 40,
@@ -212,19 +214,38 @@ class _HomeScreenState extends State<HomeScreen> {
         onTabTap: (tab) {
           switch (tab) {
             case JJBottomNavTab.home:
-            case JJBottomNavTab.trips:
               break;
-            case JJBottomNavTab.expenses:
-              final tp = context.read<TripProvider>();
-              if (tp.trips.isNotEmpty) {
-                Navigator.pushNamed(
+            case JJBottomNavTab.trips:
+              final trip = _selectedTripFrom(context.read<TripProvider>());
+              if (trip == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Create a trip first')),
+                );
+              } else {
+                Navigator.pushReplacementNamed(
                   context,
-                  '/expenses',
-                  arguments: tp.trips.first.id,
+                  '/trip-detail',
+                  arguments: trip.id,
                 );
               }
+              break;
+            case JJBottomNavTab.expenses:
+              final trip = _selectedTripFrom(context.read<TripProvider>());
+              if (trip == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Create a trip first')),
+                );
+              } else {
+                Navigator.pushReplacementNamed(
+                  context,
+                  '/expenses',
+                  arguments: trip.id,
+                );
+              }
+              break;
             case JJBottomNavTab.more:
-              Navigator.pushNamed(context, '/settings');
+              Navigator.pushReplacementNamed(context, '/settings');
+              break;
           }
         },
       ),
@@ -244,7 +265,25 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Trip? _selectedTripFrom(TripProvider tripProvider) {
+    final displayTrips = tripProvider.trips.toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (displayTrips.isEmpty) return null;
+    final index = _selectedTripIndex >= displayTrips.length
+        ? 0
+        : _selectedTripIndex;
+    return displayTrips[index];
+  }
+
   Widget _buildFeaturedCard(BuildContext context, Trip? trip, bool hasTrips) {
+    final gradientColors = hasTrips && trip != null
+        ? _featuredCardGradient(trip.colorHex)
+        : const [
+            Color(0xFF7A5AF5),
+            Color(0xFF5B2BEA),
+            Color(0xFF32158F),
+          ];
+
     return SizedBox(
       height: 160,
       child: Container(
@@ -261,15 +300,11 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF7A5AF5),
-                  Color(0xFF5B2BEA),
-                  Color(0xFF32158F),
-                ],
+                colors: gradientColors,
               ),
             ),
             child: Stack(
@@ -325,11 +360,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         children: [
                           Container(
-                            width: 36,
-                            height: 36,
+                            width: 42,
+                            height: 42,
                             decoration: BoxDecoration(
-                              color: Colors.white.withAlpha(25),
-                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.white.withAlpha(28),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
                               hasTrips

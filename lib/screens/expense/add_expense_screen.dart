@@ -51,14 +51,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   void _save(String tripId) {
-    final itemName = _itemNameController.text.trim();
+    final description = _itemNameController.text.trim();
+    final itemName = description.isEmpty ? _selectedCategory : description;
     final amountText = _amountController.text.trim();
-    if (itemName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a description')),
-      );
-      return;
-    }
     if (amountText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter amount')),
@@ -154,7 +149,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     ),
                     const SizedBox(height: 28),
                     const Text(
-                      'Item Name',
+                      'Description',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -174,7 +169,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       child: TextField(
                         controller: _itemNameController,
                         decoration: InputDecoration(
-                          hintText: 'e.g., Lunch at cafe',
+                          hintText: 'Optional note',
                           hintStyle: TextStyle(
                             color: JJColors.textMuted.withAlpha(80),
                           ),

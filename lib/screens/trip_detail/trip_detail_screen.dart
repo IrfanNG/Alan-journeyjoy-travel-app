@@ -10,6 +10,20 @@ import '../../providers/flight_provider.dart';
 import '../../providers/packing_provider.dart';
 import '../../providers/trip_provider.dart';
 
+Color _parseTripColor(String hex) {
+  final cleaned = hex.trim().replaceFirst('#', '');
+  final c = cleaned.length == 6 ? int.tryParse('0xFF$cleaned') : null;
+  if (c == null) return JJColors.primaryPurple;
+  return Color(c);
+}
+
+List<Color> _tripGradient(String colorHex) {
+  final base = _parseTripColor(colorHex);
+  final dark = Color.lerp(base, Colors.black, 0.35) ?? base;
+  final light = Color.lerp(base, Colors.white, 0.18) ?? base;
+  return [light, base, dark];
+}
+
 class TripDetailScreen extends StatelessWidget {
   const TripDetailScreen({super.key});
 
@@ -26,11 +40,6 @@ class TripDetailScreen extends StatelessWidget {
     final trip = tripId != null
         ? tripProvider.getTripById(tripId)
         : (tripProvider.trips.isNotEmpty ? tripProvider.trips.first : null);
-
-    debugPrint('TripDetail args: $args');
-    debugPrint('TripDetail tripId: $tripId');
-    debugPrint('TripDetail trips count: ${tripProvider.trips.length}');
-    debugPrint('TripDetail trip: ${trip?.name}');
 
     if (trip == null) {
       return Scaffold(
@@ -69,15 +78,11 @@ class TripDetailScreen extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: DecoratedBox(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF32158F),
-                          Color(0xFF5B2BEA),
-                          Color(0xFF6A35F4),
-                        ],
+                        colors: _tripGradient(trip.colorHex),
                       ),
                     ),
                     child: const CustomPaint(
@@ -178,13 +183,11 @@ class TripDetailScreen extends StatelessWidget {
                               label: 'Flights',
                               trailing:
                                   '${tripFlights.length} flight${tripFlights.length == 1 ? '' : 's'}',
-                              onTap: tripFlights.isNotEmpty
-                                  ? () => Navigator.pushNamed(
-                                      context,
-                                      '/flights',
-                                      arguments: trip.id,
-                                    )
-                                  : null,
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                '/flights',
+                                arguments: trip.id,
+                              ),
                             ),
                             const Divider(height: 1, indent: 60),
                             _buildListRow(
@@ -193,13 +196,11 @@ class TripDetailScreen extends StatelessWidget {
                               label: 'Activities',
                               trailing:
                                   '${tripActivities.length} activity${tripActivities.length == 1 ? '' : 'ies'}',
-                              onTap: tripActivities.isNotEmpty
-                                  ? () => Navigator.pushNamed(
-                                      context,
-                                      '/activities',
-                                      arguments: trip.id,
-                                    )
-                                  : null,
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                '/activities',
+                                arguments: trip.id,
+                              ),
                             ),
                             const Divider(height: 1, indent: 60),
                             _buildListRow(
@@ -209,13 +210,11 @@ class TripDetailScreen extends StatelessWidget {
                               trailing: tripItems.isNotEmpty
                                   ? '$packedCount/${tripItems.length}'
                                   : '0',
-                              onTap: tripItems.isNotEmpty
-                                  ? () => Navigator.pushNamed(
-                                      context,
-                                      '/packing',
-                                      arguments: trip.id,
-                                    )
-                                  : null,
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                '/packing',
+                                arguments: trip.id,
+                              ),
                             ),
                             const Divider(height: 1, indent: 60),
                             _buildListRow(
@@ -242,25 +241,24 @@ class TripDetailScreen extends StatelessWidget {
       ),
       bottomNavigationBar: JJBottomNav(
         currentTab: JJBottomNavTab.trips,
-        onCenterTap: () =>
-            Navigator.pushNamed(context, '/add-trip'),
+        onCenterTap: () => Navigator.pushNamed(context, '/add-trip'),
         onTabTap: (tab) {
           switch (tab) {
             case JJBottomNavTab.home:
+              Navigator.pushReplacementNamed(context, '/home');
+              break;
             case JJBottomNavTab.trips:
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/home',
-                (_) => false,
-              );
+              break;
             case JJBottomNavTab.expenses:
-              Navigator.pushNamed(
+              Navigator.pushReplacementNamed(
                 context,
                 '/expenses',
                 arguments: trip.id,
               );
+              break;
             case JJBottomNavTab.more:
-              Navigator.pushNamed(context, '/settings');
+              Navigator.pushReplacementNamed(context, '/settings');
+              break;
           }
         },
       ),
@@ -288,7 +286,11 @@ class TripDetailScreen extends StatelessWidget {
           label: 'Itinerary',
           isActive: false,
           onTap: () =>
-              Navigator.pushNamed(context, '/activities', arguments: tripId),
+              Navigator.pushReplacementNamed(
+                context,
+                '/activities',
+                arguments: tripId,
+              ),
         ),
         _actionChip(
           context,
@@ -296,7 +298,11 @@ class TripDetailScreen extends StatelessWidget {
           label: 'Expenses',
           isActive: false,
           onTap: () =>
-              Navigator.pushNamed(context, '/expenses', arguments: tripId),
+              Navigator.pushReplacementNamed(
+                context,
+                '/expenses',
+                arguments: tripId,
+              ),
         ),
         _actionChip(
           context,

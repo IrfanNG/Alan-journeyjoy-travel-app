@@ -20,6 +20,37 @@ void main() async {
 class JourneyJoyApp extends StatelessWidget {
   const JourneyJoyApp({super.key});
 
+  Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
+    final builder = AppRoutes.routes[settings.name];
+    if (builder == null) return null;
+
+    return PageRouteBuilder(
+      settings: settings,
+      transitionDuration: const Duration(milliseconds: 200),
+      reverseTransitionDuration: const Duration(milliseconds: 160),
+      pageBuilder: (context, secondaryAnimation, tertiaryAnimation) =>
+          builder(context),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.02),
+              end: Offset.zero,
+            ).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -40,7 +71,7 @@ class JourneyJoyApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
             initialRoute: AppRoutes.initialRoute,
-            routes: AppRoutes.routes,
+            onGenerateRoute: _onGenerateRoute,
           );
         },
       ),

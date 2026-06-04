@@ -34,6 +34,13 @@ class _DocumentScreenState extends State<DocumentScreen> {
     return _documents.where((d) => d.category == 'Other').toList();
   }
 
+  String _resolveTripId(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is String && args.isNotEmpty) return args;
+    final tp = context.read<TripProvider>();
+    return tp.trips.isNotEmpty ? tp.trips.first.id : '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final docs = _filtered;
@@ -228,9 +235,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Document upload coming soon'),
-                      ),
+                      const SnackBar(content: Text('Document upload coming later')),
                     );
                   },
                   icon: const Icon(Icons.upload_file, size: 22),
@@ -259,29 +264,44 @@ class _DocumentScreenState extends State<DocumentScreen> {
         currentTab: JJBottomNavTab.trips,
         onCenterTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Document upload coming soon')),
+            const SnackBar(content: Text('Document upload coming later')),
           );
         },
         onTabTap: (tab) {
+          final tripId = _resolveTripId(context);
           switch (tab) {
             case JJBottomNavTab.home:
+              Navigator.pushReplacementNamed(context, '/home');
+              break;
             case JJBottomNavTab.trips:
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/home',
-                (_) => false,
-              );
-            case JJBottomNavTab.expenses:
-              final tp = context.read<TripProvider>();
-              if (tp.trips.isNotEmpty) {
-                Navigator.pushNamed(
+              if (tripId.isNotEmpty) {
+                Navigator.pushReplacementNamed(
                   context,
-                  '/expenses',
-                  arguments: tp.trips.first.id,
+                  '/trip-detail',
+                  arguments: tripId,
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Create a trip first')),
                 );
               }
+              break;
+            case JJBottomNavTab.expenses:
+              if (tripId.isNotEmpty) {
+                Navigator.pushReplacementNamed(
+                  context,
+                  '/expenses',
+                  arguments: tripId,
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Create a trip first')),
+                );
+              }
+              break;
             case JJBottomNavTab.more:
-              Navigator.pushNamed(context, '/settings');
+              Navigator.pushReplacementNamed(context, '/settings');
+              break;
           }
         },
       ),

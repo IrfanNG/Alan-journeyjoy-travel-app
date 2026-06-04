@@ -325,16 +325,20 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         onTabTap: (tab) {
           switch (tab) {
             case JJBottomNavTab.home:
+              Navigator.pushReplacementNamed(context, '/home');
+              break;
             case JJBottomNavTab.trips:
-              Navigator.pushNamedAndRemoveUntil(
+              Navigator.pushReplacementNamed(
                 context,
-                '/home',
-                (_) => false,
+                '/trip-detail',
+                arguments: tripId,
               );
+              break;
             case JJBottomNavTab.expenses:
               break;
             case JJBottomNavTab.more:
-              Navigator.pushNamed(context, '/settings');
+              Navigator.pushReplacementNamed(context, '/settings');
+              break;
           }
         },
       ),

@@ -308,19 +308,36 @@ class SettingsScreen extends StatelessWidget {
         currentTab: JJBottomNavTab.more,
         onCenterTap: () => Navigator.pushNamed(context, '/add-trip'),
         onTabTap: (tab) {
+          final tp = context.read<TripProvider>();
+          final tripId = tp.trips.isNotEmpty ? tp.trips.first.id : '';
           switch (tab) {
             case JJBottomNavTab.home:
+              Navigator.pushReplacementNamed(context, '/home');
+              break;
             case JJBottomNavTab.trips:
-              Navigator.pushNamedAndRemoveUntil(context, '/home', (_) => false);
+              if (tripId.isNotEmpty) {
+                Navigator.pushReplacementNamed(
+                  context,
+                  '/trip-detail',
+                  arguments: tripId,
+                );
+              } else {
+                Navigator.pushReplacementNamed(context, '/home');
+              }
+              break;
             case JJBottomNavTab.expenses:
-              final tp = context.read<TripProvider>();
-              if (tp.trips.isNotEmpty) {
-                Navigator.pushNamed(
+              if (tripId.isNotEmpty) {
+                Navigator.pushReplacementNamed(
                   context,
                   '/expenses',
-                  arguments: tp.trips.first.id,
+                  arguments: tripId,
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Create a trip first')),
                 );
               }
+              break;
             case JJBottomNavTab.more:
               break;
           }

@@ -212,10 +212,6 @@ void main() {
         lastSnackbar = null;
         saved = false;
 
-        if (desc.trim().isEmpty) {
-          lastSnackbar = 'Please enter a description';
-          return;
-        }
         if (amountText.trim().isEmpty) {
           lastSnackbar = 'Please enter amount';
           return;
@@ -232,10 +228,10 @@ void main() {
         saved = true;
       }
 
-      // Empty description
+      // Empty description is allowed
       simulateSave('', '25');
-      expect(lastSnackbar, 'Please enter a description');
-      expect(saved, false);
+      expect(lastSnackbar, isNull);
+      expect(saved, true);
 
       // Empty amount
       simulateSave('Lunch', '');
@@ -261,6 +257,14 @@ void main() {
       simulateSave('Lunch', '25.50');
       expect(lastSnackbar, isNull);
       expect(saved, true);
+    });
+
+    test('E3c. Add expense with empty description saves', () {
+      final provider = ExpenseProvider()..loadExpenses();
+      provider.addExpense('trip1', 'Food', 10, 'Food');
+
+      expect(provider.getExpensesForTrip('trip1'), hasLength(1));
+      expect(provider.getExpensesForTrip('trip1').first.itemName, 'Food');
     });
 
     test('E4. Expenses persist after reload', () {
