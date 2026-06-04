@@ -52,16 +52,29 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   void _save(String tripId) {
     final itemName = _itemNameController.text.trim();
-    final amount = double.tryParse(_amountController.text.trim());
+    final amountText = _amountController.text.trim();
     if (itemName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a description')),
       );
       return;
     }
-    if (amount == null || amount <= 0) {
+    if (amountText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter amount')),
+      );
+      return;
+    }
+    final amount = double.tryParse(amountText);
+    if (amount == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a valid amount')),
+      );
+      return;
+    }
+    if (amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Amount must be greater than 0')),
       );
       return;
     }
@@ -140,6 +153,41 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       ],
                     ),
                     const SizedBox(height: 28),
+                    const Text(
+                      'Item Name',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: JJColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: JJColors.primaryPurple.withAlpha(15),
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _itemNameController,
+                        decoration: InputDecoration(
+                          hintText: 'e.g., Lunch at cafe',
+                          hintStyle: TextStyle(
+                            color: JJColors.textMuted.withAlpha(80),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     const Text(
                       'Amount',
                       style: TextStyle(

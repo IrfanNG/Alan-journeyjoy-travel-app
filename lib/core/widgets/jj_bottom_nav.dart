@@ -2,15 +2,47 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme.dart';
 
+enum JJBottomNavTab { home, trips, expenses, more }
+
 class JJBottomNav extends StatelessWidget {
-  final int currentIndex;
-  final void Function(int)? onTap;
+  final JJBottomNavTab currentTab;
+  final void Function(JJBottomNavTab)? onTabTap;
+  final VoidCallback? onCenterTap;
 
   const JJBottomNav({
     super.key,
-    this.currentIndex = 0,
-    this.onTap,
+    this.currentTab = JJBottomNavTab.home,
+    this.onTabTap,
+    this.onCenterTap,
   });
+
+  int get _currentIndex {
+    switch (currentTab) {
+      case JJBottomNavTab.home:
+        return 0;
+      case JJBottomNavTab.trips:
+        return 1;
+      case JJBottomNavTab.expenses:
+        return 3;
+      case JJBottomNavTab.more:
+        return 4;
+    }
+  }
+
+  void _handleTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        onTabTap?.call(JJBottomNavTab.home);
+      case 1:
+        onTabTap?.call(JJBottomNavTab.trips);
+      case 2:
+        onCenterTap?.call();
+      case 3:
+        onTabTap?.call(JJBottomNavTab.expenses);
+      case 4:
+        onTabTap?.call(JJBottomNavTab.more);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,11 +65,11 @@ class JJBottomNav extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _navItem(Icons.home_rounded, 'Home', 0),
-              _navItem(Icons.flight_takeoff, 'Trips', 1),
-              _centerPlusButton(2),
-              _navItem(Icons.monetization_on_outlined, 'Expenses', 3),
-              _navItem(Icons.settings_outlined, 'More', 4),
+              _navItem(context, Icons.home_rounded, 'Home', 0),
+              _navItem(context, Icons.flight_takeoff, 'Trips', 1),
+              _centerPlusButton(context, 2),
+              _navItem(context, Icons.monetization_on_outlined, 'Expenses', 3),
+              _navItem(context, Icons.settings_outlined, 'More', 4),
             ],
           ),
         ),
@@ -45,9 +77,9 @@ class JJBottomNav extends StatelessWidget {
     );
   }
 
-  Widget _centerPlusButton(int index) {
+  Widget _centerPlusButton(BuildContext context, int index) {
     return GestureDetector(
-      onTap: () => onTap?.call(index),
+      onTap: () => _handleTap(context, index),
       child: Container(
         width: 56,
         height: 56,
@@ -71,10 +103,10 @@ class JJBottomNav extends StatelessWidget {
     );
   }
 
-  Widget _navItem(IconData icon, String label, int index) {
-    final selected = index == currentIndex;
+  Widget _navItem(BuildContext context, IconData icon, String label, int index) {
+    final selected = index == _currentIndex;
     return GestureDetector(
-      onTap: () => onTap?.call(index),
+      onTap: () => _handleTap(context, index),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../core/widgets/jj_bottom_nav.dart';
 import '../../data/models/trip_model.dart';
 import '../../providers/trip_provider.dart';
 
@@ -44,7 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
               : null;
           final screenHeight =
               MediaQuery.of(context).size.height -
-              MediaQuery.of(context).padding.bottom;
+              MediaQuery.of(context).padding.bottom -
+              72;
           final contentHeight = screenHeight < 760 ? 760.0 : screenHeight;
 
           return SingleChildScrollView(
@@ -202,6 +204,28 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           );
+        },
+      ),
+      bottomNavigationBar: JJBottomNav(
+        currentTab: JJBottomNavTab.home,
+        onCenterTap: () => Navigator.pushNamed(context, '/add-trip'),
+        onTabTap: (tab) {
+          switch (tab) {
+            case JJBottomNavTab.home:
+            case JJBottomNavTab.trips:
+              break;
+            case JJBottomNavTab.expenses:
+              final tp = context.read<TripProvider>();
+              if (tp.trips.isNotEmpty) {
+                Navigator.pushNamed(
+                  context,
+                  '/expenses',
+                  arguments: tp.trips.first.id,
+                );
+              }
+            case JJBottomNavTab.more:
+              Navigator.pushNamed(context, '/settings');
+          }
         },
       ),
     );

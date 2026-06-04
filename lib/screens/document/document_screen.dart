@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
 import '../../core/widgets/jj_back_button.dart';
 import '../../core/widgets/jj_bottom_nav.dart';
+import '../../providers/trip_provider.dart';
 
 class DocumentScreen extends StatefulWidget {
   const DocumentScreen({super.key});
@@ -250,23 +252,38 @@ class _DocumentScreenState extends State<DocumentScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            JJBottomNav(
-              currentIndex: 3,
-              onTap: (i) {
-                if (i == 0) {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/home',
-                    (_) => false,
-                  );
-                } else if (i == 4) {
-                  Navigator.pushNamed(context, '/settings');
-                }
-              },
-            ),
           ],
         ),
+      ),
+      bottomNavigationBar: JJBottomNav(
+        currentTab: JJBottomNavTab.trips,
+        onCenterTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Document upload coming soon')),
+          );
+        },
+        onTabTap: (tab) {
+          switch (tab) {
+            case JJBottomNavTab.home:
+            case JJBottomNavTab.trips:
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/home',
+                (_) => false,
+              );
+            case JJBottomNavTab.expenses:
+              final tp = context.read<TripProvider>();
+              if (tp.trips.isNotEmpty) {
+                Navigator.pushNamed(
+                  context,
+                  '/expenses',
+                  arguments: tp.trips.first.id,
+                );
+              }
+            case JJBottomNavTab.more:
+              Navigator.pushNamed(context, '/settings');
+          }
+        },
       ),
     );
   }

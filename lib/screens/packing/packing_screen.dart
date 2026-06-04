@@ -5,6 +5,7 @@ import '../../app/theme.dart';
 import '../../core/widgets/jj_back_button.dart';
 import '../../core/widgets/jj_bottom_nav.dart';
 import '../../providers/packing_provider.dart';
+import '../../providers/trip_provider.dart';
 
 class PackingScreen extends StatefulWidget {
   const PackingScreen({super.key});
@@ -25,7 +26,14 @@ class _PackingScreenState extends State<PackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final tripId = ModalRoute.of(context)!.settings.arguments as String;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    final String tripId;
+    if (args is String) {
+      tripId = args;
+    } else {
+      final tp = context.read<TripProvider>();
+      tripId = tp.trips.isNotEmpty ? tp.trips.first.id : '';
+    }
     final packingProvider = context.watch<PackingProvider>();
     final tripItems = packingProvider.getItemsForTrip(tripId);
     final total = tripItems.length;
@@ -268,23 +276,35 @@ class _PackingScreenState extends State<PackingScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            JJBottomNav(
-              currentIndex: 3,
-              onTap: (i) {
-                if (i == 0) {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/home',
-                    (_) => false,
-                  );
-                } else if (i == 4) {
-                  Navigator.pushNamed(context, '/settings');
-                }
-              },
-            ),
           ],
         ),
+      ),
+      bottomNavigationBar: JJBottomNav(
+        currentTab: JJBottomNavTab.trips,
+        onCenterTap: tripId.isNotEmpty
+            ? () => setState(() => _showAdd = true)
+            : null,
+        onTabTap: (tab) {
+          switch (tab) {
+            case JJBottomNavTab.home:
+            case JJBottomNavTab.trips:
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/home',
+                (_) => false,
+              );
+            case JJBottomNavTab.expenses:
+              if (tripId.isNotEmpty) {
+                Navigator.pushNamed(
+                  context,
+                  '/expenses',
+                  arguments: tripId,
+                );
+              }
+            case JJBottomNavTab.more:
+              Navigator.pushNamed(context, '/settings');
+          }
+        },
       ),
       bottomSheet: _showAdd
           ? Container(

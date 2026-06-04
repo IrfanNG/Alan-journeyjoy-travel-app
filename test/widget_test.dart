@@ -15,6 +15,7 @@ void main() {
   });
 
   tearDown(() async {
+    await Hive.close();
     await Hive.deleteBoxFromDisk('trips');
     await Hive.deleteBoxFromDisk('expenses');
     await Hive.deleteBoxFromDisk('flights');

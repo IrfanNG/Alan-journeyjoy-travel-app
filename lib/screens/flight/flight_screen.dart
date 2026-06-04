@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
 import '../../core/widgets/jj_back_button.dart';
+import '../../core/widgets/jj_bottom_nav.dart';
 import '../../providers/flight_provider.dart';
+import '../../providers/trip_provider.dart';
 
 class FlightScreen extends StatefulWidget {
   const FlightScreen({super.key});
@@ -30,7 +32,14 @@ class _FlightScreenState extends State<FlightScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final tripId = ModalRoute.of(context)!.settings.arguments as String;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    final String tripId;
+    if (args is String) {
+      tripId = args;
+    } else {
+      final tp = context.read<TripProvider>();
+      tripId = tp.trips.isNotEmpty ? tp.trips.first.id : '';
+    }
     final flightProvider = context.watch<FlightProvider>();
     final tripFlights = flightProvider.getFlightsForTrip(tripId);
 
@@ -409,6 +418,33 @@ class _FlightScreenState extends State<FlightScreen> {
               ),
             )
           : null,
+      bottomNavigationBar: JJBottomNav(
+        currentTab: JJBottomNavTab.trips,
+        onCenterTap: tripId.isNotEmpty
+            ? () => setState(() => _showAdd = true)
+            : null,
+        onTabTap: (tab) {
+          switch (tab) {
+            case JJBottomNavTab.home:
+            case JJBottomNavTab.trips:
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/home',
+                (_) => false,
+              );
+            case JJBottomNavTab.expenses:
+              if (tripId.isNotEmpty) {
+                Navigator.pushNamed(
+                  context,
+                  '/expenses',
+                  arguments: tripId,
+                );
+              }
+            case JJBottomNavTab.more:
+              Navigator.pushNamed(context, '/settings');
+          }
+        },
+      ),
     );
   }
 }

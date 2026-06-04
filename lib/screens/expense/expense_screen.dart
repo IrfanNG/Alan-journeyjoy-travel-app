@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
 import '../../core/widgets/jj_back_button.dart';
+import '../../core/widgets/jj_bottom_nav.dart';
 import '../../providers/expense_provider.dart';
+import '../../providers/trip_provider.dart';
 import 'add_expense_screen.dart';
 
 class ExpenseScreen extends StatefulWidget {
@@ -17,7 +19,14 @@ class ExpenseScreen extends StatefulWidget {
 class _ExpenseScreenState extends State<ExpenseScreen> {
   @override
   Widget build(BuildContext context) {
-    final tripId = ModalRoute.of(context)!.settings.arguments as String;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    final String tripId;
+    if (args is String) {
+      tripId = args;
+    } else {
+      final tp = context.read<TripProvider>();
+      tripId = tp.trips.isNotEmpty ? tp.trips.first.id : '';
+    }
     final expenseProvider = context.watch<ExpenseProvider>();
     final tripExpenses = expenseProvider.getExpensesForTrip(tripId);
     final totalSpent = expenseProvider.getTotalForTrip(tripId);
@@ -298,11 +307,12 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
               ),
             ),
           ),
-          Positioned(
-            right: 24,
-            bottom: 32,
-            child: FloatingActionButton(
-              onPressed: () {
+        ],
+      ),
+      bottomNavigationBar: JJBottomNav(
+        currentTab: JJBottomNavTab.expenses,
+        onCenterTap: tripId.isNotEmpty
+            ? () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -310,14 +320,23 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                     settings: RouteSettings(arguments: tripId),
                   ),
                 );
-              },
-              backgroundColor: JJColors.primaryPurple,
-              foregroundColor: Colors.white,
-              shape: const CircleBorder(),
-              child: const Icon(Icons.add, size: 28),
-            ),
-          ),
-        ],
+              }
+            : null,
+        onTabTap: (tab) {
+          switch (tab) {
+            case JJBottomNavTab.home:
+            case JJBottomNavTab.trips:
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/home',
+                (_) => false,
+              );
+            case JJBottomNavTab.expenses:
+              break;
+            case JJBottomNavTab.more:
+              Navigator.pushNamed(context, '/settings');
+          }
+        },
       ),
     );
   }
