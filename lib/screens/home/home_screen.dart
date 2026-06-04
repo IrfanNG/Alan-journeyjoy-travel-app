@@ -16,40 +16,49 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pt = MediaQuery.of(context).padding.top;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F7FF),
-      body: SafeArea(
-        child: Consumer<TripProvider>(
-          builder: (context, tripProvider, _) {
-            final trips = tripProvider.trips;
-            final featured = trips.isNotEmpty ? trips.first : null;
-            return SingleChildScrollView(
+      body: Consumer<TripProvider>(
+        builder: (context, tripProvider, _) {
+          final trips = tripProvider.trips;
+          final featured = trips.isNotEmpty ? trips.first : null;
+          final screenHeight =
+              MediaQuery.of(context).size.height -
+              MediaQuery.of(context).padding.top -
+              MediaQuery.of(context).padding.bottom;
+          final contentHeight = screenHeight < 760 ? 760.0 : screenHeight;
+
+          return SingleChildScrollView(
+            child: SizedBox(
+              height: contentHeight,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Column(
-                    children: [
-                      _buildHeader(context),
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(32),
-                          topRight: Radius.circular(32),
-                        ),
-                        child: Container(
-                          color: const Color(0xFFF8F7FF),
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 160),
-                              _buildModuleGrid(context, trips.isNotEmpty),
-                              const SizedBox(height: 48),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 220 + pt,
+                    child: _buildHeader(context, topPadding: pt),
                   ),
                   Positioned(
-                    top: 135,
+                    top: 170 + pt,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF8F7FF),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(38),
+                          topRight: Radius.circular(38),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 135 + pt,
                     left: 24,
                     right: 24,
                     child: _buildFeaturedCard(
@@ -58,19 +67,24 @@ class HomeScreen extends StatelessWidget {
                       trips.isNotEmpty,
                     ),
                   ),
+                  Positioned(
+                    top: 340 + pt,
+                    left: 0,
+                    right: 0,
+                    child: _buildModuleGrid(context, trips.isNotEmpty),
+                  ),
                 ],
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, {double topPadding = 0}) {
     return Container(
       width: double.infinity,
-      height: 180,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -79,7 +93,7 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+        padding: EdgeInsets.fromLTRB(24, 8 + topPadding, 24, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
