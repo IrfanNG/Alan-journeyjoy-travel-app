@@ -4,6 +4,7 @@ import '../screens/activity/activity_screen.dart';
 import '../screens/add_trip/add_trip_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
+import '../screens/document/document_screen.dart';
 import '../screens/expense/expense_screen.dart';
 import '../screens/flight/flight_screen.dart';
 import '../screens/home/home_screen.dart';
@@ -25,6 +26,7 @@ class AppRoutes {
     '/expenses': (_) => const ExpenseScreen(),
     '/flights': (_) => const FlightScreen(),
     '/activities': (_) => const ActivityScreen(),
+    '/documents': (_) => const DocumentScreen(),
     '/packing': (_) => const PackingScreen(),
     '/settings': (_) => const SettingsScreen(),
   };

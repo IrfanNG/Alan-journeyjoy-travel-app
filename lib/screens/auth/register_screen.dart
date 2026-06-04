@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../providers/settings_provider.dart';
+import '../../../core/widgets/jj_back_button.dart';
 import 'widgets/auth_hero_banner.dart';
 import 'widgets/auth_primary_button.dart';
 import 'widgets/auth_text_field.dart';
@@ -45,9 +46,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
       return;
     }
 
@@ -70,18 +71,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         children: [
           AuthHeroBanner(
             heightFraction: 0.38,
-            backButton: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(30),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
-              ),
-            ),
+            backButton: const JJBackButton(),
           ),
           Expanded(
             child: Transform.translate(
@@ -165,7 +155,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 height: 24,
                                 child: Checkbox(
                                   value: _termsAccepted,
-                                  onChanged: (v) => setState(() => _termsAccepted = v ?? false),
+                                  onChanged: (v) => setState(
+                                    () => _termsAccepted = v ?? false,
+                                  ),
                                   activeColor: const Color(0xFF5B2BEA),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(4),
@@ -176,7 +168,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               Expanded(
                                 child: RichText(
                                   text: const TextSpan(
-                                    style: TextStyle(fontSize: 13, color: Color(0xFF7A7395)),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF7A7395),
+                                    ),
                                     children: [
                                       TextSpan(text: 'I agree to the '),
                                       TextSpan(
@@ -201,14 +196,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ],
                           ),
                           const SizedBox(height: 24),
-                          AuthPrimaryButton(label: 'Sign Up', onPressed: _handleSignUp),
+                          AuthPrimaryButton(
+                            label: 'Sign Up',
+                            onPressed: _handleSignUp,
+                          ),
                           const SizedBox(height: 24),
                           Center(
                             child: GestureDetector(
-                              onTap: () => Navigator.pushReplacementNamed(context, '/login'),
+                              onTap: () => Navigator.pushReplacementNamed(
+                                context,
+                                '/login',
+                              ),
                               child: RichText(
                                 text: const TextSpan(
-                                  style: TextStyle(fontSize: 14, color: Color(0xFF7A7395)),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF7A7395),
+                                  ),
                                   children: [
                                     TextSpan(text: 'Already have an account? '),
                                     TextSpan(

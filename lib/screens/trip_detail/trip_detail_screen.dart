@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
+import '../../core/widgets/jj_back_button.dart';
 import '../../providers/activity_provider.dart';
 import '../../providers/flight_provider.dart';
 import '../../providers/packing_provider.dart';
@@ -13,34 +14,35 @@ class TripDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tripId = ModalRoute.of(context)!.settings.arguments as String;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    final tripId = args is String ? args : null;
+
     final tripProvider = context.watch<TripProvider>();
-    tripProvider.loadTrips();
-    final trip = tripProvider.trips.where((t) => t.id == tripId).firstOrNull;
+    if (tripProvider.trips.isEmpty) {
+      tripProvider.loadTrips();
+    }
+
+    final trip = tripId != null
+        ? tripProvider.getTripById(tripId)
+        : (tripProvider.trips.isNotEmpty ? tripProvider.trips.first : null);
+
+    debugPrint('TripDetail args: $args');
+    debugPrint('TripDetail tripId: $tripId');
+    debugPrint('TripDetail trips count: ${tripProvider.trips.length}');
+    debugPrint('TripDetail trip: ${trip?.name}');
 
     if (trip == null) {
       return Scaffold(
         backgroundColor: JJColors.lightBg,
         body: SafeArea(
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.search_off,
-                  size: 64,
-                  color: JJColors.primaryPurple.withAlpha(80),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Trip not found',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: JJColors.textDark,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            child: Text(
+              'Trip not found',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -51,153 +53,111 @@ class TripDetailScreen extends StatelessWidget {
     final flightProvider = context.watch<FlightProvider>();
     final packingProvider = context.watch<PackingProvider>();
 
-    final tripActivities = activityProvider.getActivitiesForTrip(tripId);
-    final tripFlights = flightProvider.getFlightsForTrip(tripId);
-    final tripItems = packingProvider.getItemsForTrip(tripId);
+    final tripActivities = activityProvider.getActivitiesForTrip(trip.id);
+    final tripFlights = flightProvider.getFlightsForTrip(trip.id);
+    final tripItems = packingProvider.getItemsForTrip(trip.id);
     final packedCount = tripItems.where((i) => i.isPacked).length;
-
-    final colorHex = trip.colorHex.replaceFirst('#', '');
-    final color = Color(int.parse('FF$colorHex', radix: 16));
 
     return Scaffold(
       backgroundColor: JJColors.lightBg,
-      body: Stack(
+      body: Column(
         children: [
           SizedBox(
-            height: 250,
-            width: double.infinity,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color, color.withAlpha(180), JJColors.deepPurple],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: CustomPaint(
-                painter: _HeroDecorPainter(color: color),
-                child: const SizedBox.expand(),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(30),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(30),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.edit_outlined,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned.fill(
-            top: 215,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: JJColors.lightBg,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 22),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  trip.name,
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w800,
-                                    color: JJColors.textDark,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  DateFormat(
-                                    'MMM dd, yyyy',
-                                  ).format(trip.createdAt),
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: JJColors.textMuted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: JJColors.primaryPurple.withAlpha(20),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Icon(
-                              Icons.ios_share,
-                              color: JJColors.primaryPurple,
-                              size: 20,
-                            ),
-                          ),
+            height: 245,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF32158F),
+                          Color(0xFF5B2BEA),
+                          Color(0xFF6A35F4),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    _buildQuickActions(context, trip.id),
-                    const SizedBox(height: 28),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          "What's Next?",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: JJColors.textDark,
+                    child: const CustomPaint(
+                      painter: _HeroDecorPainter(),
+                      child: SizedBox.expand(),
+                    ),
+                  ),
+                ),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const JJBackButton(),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(30),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.edit_outlined,
+                            color: Colors.white,
+                            size: 20,
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(height: 14),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Container(
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Transform.translate(
+              offset: const Offset(0, -28),
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: JJColors.lightBg,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        trip.name,
+                        style: const TextStyle(
+                          color: JJColors.textDark,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        DateFormat('MMM dd, yyyy').format(trip.createdAt),
+                        style: const TextStyle(
+                          color: JJColors.textMuted,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildQuickActions(context, trip.id),
+                      const SizedBox(height: 24),
+                      const Text(
+                        "What's Next?",
+                        style: TextStyle(
+                          color: JJColors.textDark,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
@@ -262,20 +222,17 @@ class TripDetailScreen extends StatelessWidget {
                               icon: Icons.description_outlined,
                               label: 'Documents',
                               trailing: null,
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Document Hub coming later'),
-                                  ),
-                                );
-                              },
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                '/documents',
+                                arguments: trip.id,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -286,51 +243,48 @@ class TripDetailScreen extends StatelessWidget {
   }
 
   Widget _buildQuickActions(BuildContext context, String tripId) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _actionChip(
-            context,
-            icon: Icons.explore_outlined,
-            label: 'Plan',
-            isActive: true,
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Plan feature coming soon')),
-              );
-            },
-          ),
-          _actionChip(
-            context,
-            icon: Icons.route_outlined,
-            label: 'Itinerary',
-            isActive: false,
-            onTap: () =>
-                Navigator.pushNamed(context, '/activities', arguments: tripId),
-          ),
-          _actionChip(
-            context,
-            icon: Icons.account_balance_wallet_outlined,
-            label: 'Expenses',
-            isActive: false,
-            onTap: () =>
-                Navigator.pushNamed(context, '/expenses', arguments: tripId),
-          ),
-          _actionChip(
-            context,
-            icon: Icons.note_alt_outlined,
-            label: 'Notes',
-            isActive: false,
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notes coming later')),
-              );
-            },
-          ),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _actionChip(
+          context,
+          icon: Icons.explore_outlined,
+          label: 'Plan',
+          isActive: true,
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Plan feature coming soon')),
+            );
+          },
+        ),
+        _actionChip(
+          context,
+          icon: Icons.route_outlined,
+          label: 'Itinerary',
+          isActive: false,
+          onTap: () =>
+              Navigator.pushNamed(context, '/activities', arguments: tripId),
+        ),
+        _actionChip(
+          context,
+          icon: Icons.account_balance_wallet_outlined,
+          label: 'Expenses',
+          isActive: false,
+          onTap: () =>
+              Navigator.pushNamed(context, '/expenses', arguments: tripId),
+        ),
+        _actionChip(
+          context,
+          icon: Icons.note_alt_outlined,
+          label: 'Notes',
+          isActive: false,
+          onTap: () {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Notes coming later')));
+          },
+        ),
+      ],
     );
   }
 
@@ -442,9 +396,7 @@ class TripDetailScreen extends StatelessWidget {
 }
 
 class _HeroDecorPainter extends CustomPainter {
-  final Color color;
-
-  _HeroDecorPainter({required this.color});
+  const _HeroDecorPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -540,6 +492,5 @@ class _HeroDecorPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _HeroDecorPainter oldDelegate) =>
-      oldDelegate.color != color;
+  bool shouldRepaint(covariant _HeroDecorPainter oldDelegate) => false;
 }

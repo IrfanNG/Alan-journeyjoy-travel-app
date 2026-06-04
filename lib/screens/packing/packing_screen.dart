@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
+import '../../core/widgets/jj_back_button.dart';
+import '../../core/widgets/jj_bottom_nav.dart';
 import '../../providers/packing_provider.dart';
 
 class PackingScreen extends StatefulWidget {
@@ -31,6 +33,7 @@ class _PackingScreenState extends State<PackingScreen> {
     final progress = packingProvider.getProgress(tripId);
 
     return Scaffold(
+      backgroundColor: JJColors.lightBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -50,23 +53,7 @@ class _PackingScreenState extends State<PackingScreen> {
               ),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(25),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.arrow_back,
-                              color: Colors.white, size: 20),
-                        ),
-                      ),
-                      const Spacer(),
-                    ],
-                  ),
+                  Row(children: [const JJBackButton(), const Spacer()]),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -100,49 +87,49 @@ class _PackingScreenState extends State<PackingScreen> {
                           color: Colors.white.withAlpha(25),
                           borderRadius: BorderRadius.circular(18),
                         ),
-                        child: Icon(Icons.checklist,
-                            size: 28, color: Colors.white.withAlpha(180)),
+                        child: Icon(
+                          Icons.checklist,
+                          size: 28,
+                          color: Colors.white.withAlpha(180),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  if (total > 0)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  if (total > 0) ...[
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '$packed/$total packed',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white.withAlpha(180),
-                              ),
-                            ),
-                            Text(
-                              '${(progress * 100).toStringAsFixed(0)}%',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white.withAlpha(200),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          '$packed/$total packed',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withAlpha(180),
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            backgroundColor: Colors.white.withAlpha(30),
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                                JJColors.successGreen),
-                            minHeight: 8,
+                        Text(
+                          '${(progress * 100).toStringAsFixed(0)}%',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white.withAlpha(200),
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: Colors.white.withAlpha(30),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          JJColors.successGreen,
+                        ),
+                        minHeight: 8,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -152,8 +139,11 @@ class _PackingScreenState extends State<PackingScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.checklist,
-                              size: 64, color: JJColors.primaryPurple.withAlpha(80)),
+                          Icon(
+                            Icons.checklist,
+                            size: 64,
+                            color: JJColors.primaryPurple.withAlpha(80),
+                          ),
                           const SizedBox(height: 16),
                           const Text(
                             'Nothing packed yet',
@@ -166,20 +156,28 @@ class _PackingScreenState extends State<PackingScreen> {
                           const SizedBox(height: 8),
                           const Text(
                             'Add items to your packing list',
-                            style: TextStyle(fontSize: 14, color: JJColors.textMuted),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: JJColors.textMuted,
+                            ),
                           ),
                         ],
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       itemCount: tripItems.length,
                       itemBuilder: (context, index) {
                         final item = tripItems[index];
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             color: JJColors.cardBg,
                             borderRadius: BorderRadius.circular(18),
@@ -208,13 +206,17 @@ class _PackingScreenState extends State<PackingScreen> {
                                     border: item.isPacked
                                         ? null
                                         : Border.all(
-                                            color: JJColors.textMuted
-                                                .withAlpha(60),
-                                            width: 1.5),
+                                            color:
+                                                JJColors.textMuted.withAlpha(60),
+                                            width: 1.5,
+                                          ),
                                   ),
                                   child: item.isPacked
-                                      ? const Icon(Icons.check,
-                                          size: 18, color: Colors.white)
+                                      ? const Icon(
+                                          Icons.check,
+                                          size: 18,
+                                          color: Colors.white,
+                                        )
                                       : null,
                                 ),
                               ),
@@ -240,21 +242,50 @@ class _PackingScreenState extends State<PackingScreen> {
                       },
                     ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: () => setState(() => _showAdd = true),
+                  icon: const Icon(Icons.add, size: 22),
+                  label: const Text(
+                    'Add Item',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: JJColors.primaryPurple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            JJBottomNav(
+              currentIndex: 3,
+              onTap: (i) {
+                if (i == 0) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/home',
+                    (_) => false,
+                  );
+                } else if (i == 4) {
+                  Navigator.pushNamed(context, '/settings');
+                }
+              },
+            ),
           ],
         ),
       ),
-      floatingActionButton: _showAdd
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => setState(() => _showAdd = true),
-              backgroundColor: JJColors.primaryPurple,
-              foregroundColor: Colors.white,
-              icon: const Icon(Icons.add),
-              label: const Text('Add Item'),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
       bottomSheet: _showAdd
           ? Container(
               padding: EdgeInsets.only(
@@ -290,25 +321,32 @@ class _PackingScreenState extends State<PackingScreen> {
                           setState(() => _showAdd = false);
                           _controller.clear();
                         },
-                        child: const Icon(Icons.close, color: JJColors.textMuted),
+                        child: const Icon(
+                          Icons.close,
+                          color: JJColors.textMuted,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
                   TextField(
                     controller: _controller,
+                    autofocus: true,
                     decoration: InputDecoration(
                       hintText: 'What do you need?',
-                      hintStyle:
-                          TextStyle(color: JJColors.textMuted.withAlpha(100)),
+                      hintStyle: TextStyle(
+                        color: JJColors.textMuted.withAlpha(100),
+                      ),
                       filled: true,
-                      fillColor: JJColors.lightBg,
+                      fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -321,11 +359,14 @@ class _PackingScreenState extends State<PackingScreen> {
                         if (text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text('Please enter an item name')),
+                              content: Text('Please enter an item name'),
+                            ),
                           );
                           return;
                         }
-                        context.read<PackingProvider>().addItem(tripId, text);
+                        context
+                            .read<PackingProvider>()
+                            .addItem(tripId, text);
                         _controller.clear();
                         setState(() => _showAdd = false);
                       },
@@ -346,7 +387,9 @@ class _PackingScreenState extends State<PackingScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+                  SizedBox(
+                    height: MediaQuery.of(context).padding.bottom + 8,
+                  ),
                 ],
               ),
             )

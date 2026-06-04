@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
+import '../../core/widgets/jj_back_button.dart';
+import '../../core/widgets/jj_bottom_nav.dart';
 import '../../providers/activity_provider.dart';
 
 class ActivityScreen extends StatefulWidget {
@@ -14,6 +17,27 @@ class ActivityScreen extends StatefulWidget {
 class _ActivityScreenState extends State<ActivityScreen> {
   final _controller = TextEditingController();
   bool _showAdd = false;
+  int _selectedTab = 0;
+  final _activityColors = [
+    const Color(0xFF5B2BEA),
+    const Color(0xFF58C783),
+    const Color(0xFFF59E23),
+    const Color(0xFFEF4444),
+    const Color(0xFF3B82F6),
+    const Color(0xFFEC4899),
+    const Color(0xFF14B8A6),
+    const Color(0xFF8B5CF6),
+  ];
+  final _activityIcons = [
+    Icons.explore,
+    Icons.flight,
+    Icons.restaurant,
+    Icons.hotel,
+    Icons.directions_walk,
+    Icons.camera_alt,
+    Icons.beach_access,
+    Icons.local_activity,
+  ];
 
   @override
   void dispose() {
@@ -25,155 +49,233 @@ class _ActivityScreenState extends State<ActivityScreen> {
   Widget build(BuildContext context) {
     final tripId = ModalRoute.of(context)!.settings.arguments as String;
     final activityProvider = context.watch<ActivityProvider>();
-    final tripActivities = activityProvider.getActivitiesForTrip(tripId);
+    final allActivities = activityProvider.getActivitiesForTrip(tripId);
+    final filtered = _selectedTab == 0
+        ? allActivities
+        : allActivities.where((a) => false).toList();
 
     return Scaffold(
+      backgroundColor: JJColors.lightBg,
       body: SafeArea(
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: JJColors.gradientPurple,
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
-              ),
-              child: Column(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(25),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.arrow_back,
-                              color: Colors.white, size: 20),
-                        ),
+                  const JJBackButton(variant: JJBackButtonVariant.purpleOnLight),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Activities',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: JJColors.textDark,
                       ),
-                      const Spacer(),
-                      Text(
-                        'Activities',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white.withAlpha(200),
-                        ),
-                      ),
-                      const Spacer(),
-                      const SizedBox(width: 36),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      _statBox(Icons.schedule, '${tripActivities.length}', 'Total', JJColors.warningOrange),
-                      const SizedBox(width: 16),
-                      _statBox(Icons.check_circle_outline, '0', 'Done', JJColors.successGreen),
-                    ],
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: JJColors.primaryPurple.withAlpha(18),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: const Icon(
+                      Icons.search,
+                      color: JJColors.primaryPurple,
+                      size: 23,
+                    ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                height: 46,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: JJColors.primaryPurple.withAlpha(12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [_tabItem('Upcoming', 0), _tabItem('Done', 1)],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             Expanded(
-              child: tripActivities.isEmpty
+              child: filtered.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.explore_outlined,
-                              size: 64, color: JJColors.primaryPurple.withAlpha(80)),
-                          const SizedBox(height: 16),
+                          Icon(
+                            Icons.event_busy,
+                            size: 56,
+                            color: JJColors.primaryPurple.withAlpha(60),
+                          ),
+                          const SizedBox(height: 12),
                           const Text(
-                            'No activities planned',
+                            'No activities yet',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: JJColors.textDark,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Add your first activity below',
-                            style: TextStyle(fontSize: 14, color: JJColors.textMuted),
                           ),
                         ],
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      itemCount: tripActivities.length,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      itemCount: filtered.length,
                       itemBuilder: (context, index) {
-                        final activity = tripActivities[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
-                          decoration: BoxDecoration(
-                            color: JJColors.cardBg,
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: JJColors.primaryPurple.withAlpha(10),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: JJColors.primaryPurple.withAlpha(15),
-                                  borderRadius: BorderRadius.circular(14),
+                        final activity = filtered[index];
+                        final colorIndex = index % _activityColors.length;
+                        final icon =
+                            _activityIcons[index % _activityIcons.length];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Container(
+                            height: 84,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: JJColors.primaryPurple.withAlpha(10),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
-                                child: const Icon(Icons.explore_outlined,
-                                    color: JJColors.primaryPurple, size: 20),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  activity.name,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: JJColors.textDark,
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 72,
+                                  height: 84,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        _activityColors[colorIndex],
+                                        _activityColors[colorIndex].withAlpha(
+                                          150,
+                                        ),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(16),
+                                      bottomLeft: Radius.circular(16),
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    icon,
+                                    color: Colors.white.withAlpha(200),
+                                    size: 28,
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        activity.name,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: JJColors.textDark,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.schedule,
+                                            size: 14,
+                                            color: JJColors.textMuted.withAlpha(
+                                              150,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${DateFormat('MMM dd').format(activity.date)}${activity.timeText != null ? ' · ${activity.timeText}' : ''}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: JJColors.textMuted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: Icon(
+                                    Icons.more_horiz,
+                                    color: JJColors.textMuted.withAlpha(120),
+                                    size: 20,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
                     ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: () => setState(() => _showAdd = true),
+                  icon: const Icon(Icons.add, size: 22),
+                  label: const Text(
+                    'Add Activity',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: JJColors.primaryPurple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            JJBottomNav(
+              currentIndex: 1,
+              onTap: (i) {
+                if (i == 0) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/home',
+                    (_) => false,
+                  );
+                } else if (i == 4) {
+                  Navigator.pushNamed(context, '/settings');
+                }
+              },
+            ),
           ],
         ),
       ),
-      floatingActionButton: _showAdd
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => setState(() => _showAdd = true),
-              backgroundColor: JJColors.primaryPurple,
-              foregroundColor: Colors.white,
-              icon: const Icon(Icons.add),
-              label: const Text('Add Activity'),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
       bottomSheet: _showAdd
           ? Container(
               padding: EdgeInsets.only(
@@ -209,7 +311,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
                           setState(() => _showAdd = false);
                           _controller.clear();
                         },
-                        child: const Icon(Icons.close, color: JJColors.textMuted),
+                        child: const Icon(
+                          Icons.close,
+                          color: JJColors.textMuted,
+                        ),
                       ),
                     ],
                   ),
@@ -219,16 +324,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     autofocus: true,
                     decoration: InputDecoration(
                       hintText: 'What are you planning?',
-                      hintStyle:
-                          TextStyle(color: JJColors.textMuted.withAlpha(100)),
+                      hintStyle: TextStyle(
+                        color: JJColors.textMuted.withAlpha(100),
+                      ),
                       filled: true,
-                      fillColor: JJColors.lightBg,
+                      fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -241,18 +349,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         if (text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text('Please enter an activity')),
+                              content: Text('Please enter an activity'),
+                            ),
                           );
                           return;
                         }
                         context.read<ActivityProvider>().addActivity(
-                              tripId,
-                              text,
-                              null,
-                              DateTime.now(),
-                              null,
-                              null,
-                            );
+                          tripId,
+                          text,
+                          null,
+                          DateTime.now(),
+                          null,
+                          null,
+                        );
                         _controller.clear();
                         setState(() => _showAdd = false);
                       },
@@ -281,39 +390,25 @@ class _ActivityScreenState extends State<ActivityScreen> {
     );
   }
 
-  Widget _statBox(IconData icon, String value, String label, Color color) {
+  Widget _tabItem(String label, int index) {
+    final selected = _selectedTab == index;
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.white.withAlpha(25),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withAlpha(180),
-                  ),
-                ),
-              ],
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedTab = index),
+        child: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? JJColors.primaryPurple : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : JJColors.textMuted,
             ),
-          ],
+          ),
         ),
       ),
     );

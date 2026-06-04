@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
+import '../../core/widgets/jj_back_button.dart';
 import '../../providers/flight_provider.dart';
 
 class FlightScreen extends StatefulWidget {
@@ -53,23 +54,7 @@ class _FlightScreenState extends State<FlightScreen> {
               ),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(25),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.arrow_back,
-                              color: Colors.white, size: 20),
-                        ),
-                      ),
-                      const Spacer(),
-                    ],
-                  ),
+                  Row(children: [const JJBackButton(), const Spacer()]),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -103,8 +88,11 @@ class _FlightScreenState extends State<FlightScreen> {
                           color: Colors.white.withAlpha(25),
                           borderRadius: BorderRadius.circular(18),
                         ),
-                        child: Icon(Icons.flight,
-                            size: 28, color: Colors.white.withAlpha(180)),
+                        child: Icon(
+                          Icons.flight,
+                          size: 28,
+                          color: Colors.white.withAlpha(180),
+                        ),
                       ),
                     ],
                   ),
@@ -117,8 +105,11 @@ class _FlightScreenState extends State<FlightScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.flight_outlined,
-                              size: 64, color: JJColors.primaryPurple.withAlpha(80)),
+                          Icon(
+                            Icons.flight_outlined,
+                            size: 64,
+                            color: JJColors.primaryPurple.withAlpha(80),
+                          ),
                           const SizedBox(height: 16),
                           const Text(
                             'No flights added',
@@ -131,20 +122,28 @@ class _FlightScreenState extends State<FlightScreen> {
                           const SizedBox(height: 8),
                           const Text(
                             'Add your flight details below',
-                            style: TextStyle(fontSize: 14, color: JJColors.textMuted),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: JJColors.textMuted,
+                            ),
                           ),
                         ],
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       itemCount: tripFlights.length,
                       itemBuilder: (context, index) {
                         final flight = tripFlights[index];
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             color: JJColors.cardBg,
                             borderRadius: BorderRadius.circular(18),
@@ -165,8 +164,11 @@ class _FlightScreenState extends State<FlightScreen> {
                                   color: JJColors.primaryPurple.withAlpha(15),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
-                                child: const Icon(Icons.flight,
-                                    color: JJColors.primaryPurple, size: 22),
+                                child: const Icon(
+                                  Icons.flight,
+                                  color: JJColors.primaryPurple,
+                                  size: 22,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -251,7 +253,10 @@ class _FlightScreenState extends State<FlightScreen> {
                           _fromController.clear();
                           _toController.clear();
                         },
-                        child: const Icon(Icons.close, color: JJColors.textMuted),
+                        child: const Icon(
+                          Icons.close,
+                          color: JJColors.textMuted,
+                        ),
                       ),
                     ],
                   ),
@@ -260,16 +265,19 @@ class _FlightScreenState extends State<FlightScreen> {
                     controller: _flightNoController,
                     decoration: InputDecoration(
                       hintText: 'Flight Number',
-                      hintStyle:
-                          TextStyle(color: JJColors.textMuted.withAlpha(100)),
+                      hintStyle: TextStyle(
+                        color: JJColors.textMuted.withAlpha(100),
+                      ),
                       filled: true,
-                      fillColor: JJColors.lightBg,
+                      fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -277,16 +285,19 @@ class _FlightScreenState extends State<FlightScreen> {
                     controller: _airlineController,
                     decoration: InputDecoration(
                       hintText: 'Airline (optional)',
-                      hintStyle:
-                          TextStyle(color: JJColors.textMuted.withAlpha(100)),
+                      hintStyle: TextStyle(
+                        color: JJColors.textMuted.withAlpha(100),
+                      ),
                       filled: true,
-                      fillColor: JJColors.lightBg,
+                      fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -298,21 +309,27 @@ class _FlightScreenState extends State<FlightScreen> {
                           decoration: InputDecoration(
                             hintText: 'From',
                             hintStyle: TextStyle(
-                                color: JJColors.textMuted.withAlpha(100)),
+                              color: JJColors.textMuted.withAlpha(100),
+                            ),
                             filled: true,
-                            fillColor: JJColors.lightBg,
+                            fillColor: Colors.white,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide.none,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Icon(Icons.flight,
-                          color: JJColors.primaryPurple, size: 20),
+                      const Icon(
+                        Icons.flight,
+                        color: JJColors.primaryPurple,
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextField(
@@ -320,15 +337,18 @@ class _FlightScreenState extends State<FlightScreen> {
                           decoration: InputDecoration(
                             hintText: 'To',
                             hintStyle: TextStyle(
-                                color: JJColors.textMuted.withAlpha(100)),
+                              color: JJColors.textMuted.withAlpha(100),
+                            ),
                             filled: true,
-                            fillColor: JJColors.lightBg,
+                            fillColor: Colors.white,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide.none,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
                           ),
                         ),
                       ),
@@ -347,19 +367,20 @@ class _FlightScreenState extends State<FlightScreen> {
                         if (flightNo.isEmpty || from.isEmpty || to.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text('Please fill required fields')),
+                              content: Text('Please fill required fields'),
+                            ),
                           );
                           return;
                         }
                         context.read<FlightProvider>().addFlight(
-                              tripId,
-                              flightNo,
-                              airline.isEmpty ? null : airline,
-                              from,
-                              to,
-                              DateTime.now(),
-                              DateTime.now(),
-                            );
+                          tripId,
+                          flightNo,
+                          airline.isEmpty ? null : airline,
+                          from,
+                          to,
+                          DateTime.now(),
+                          DateTime.now(),
+                        );
                         _flightNoController.clear();
                         _airlineController.clear();
                         _fromController.clear();

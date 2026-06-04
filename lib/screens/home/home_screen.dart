@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
+import '../../data/models/trip_model.dart';
 import '../../providers/trip_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedTripIndex = 0;
 
   String _greeting() {
     final hour = DateTime.now().hour;
@@ -17,17 +24,24 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pt = MediaQuery.of(context).padding.top;
-    const headerHeight = 260.0;
-    const cardHeight = 160.0;
-    final cardTop = headerHeight - 120;
-    final bodyTop = headerHeight - 72;
-    final gridTop = cardTop + cardHeight + 45;
+    const headerHeight = 285.0;
+    const cardTop = 190.0;
+    const bodyTop = 238.0;
+    const gridTop = 420.0;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F7FF),
       body: Consumer<TripProvider>(
         builder: (context, tripProvider, _) {
           final trips = tripProvider.trips;
-          final featured = trips.isNotEmpty ? trips.first : null;
+          List<Trip> displayTrips = trips.toList();
+          displayTrips.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          if (_selectedTripIndex >= displayTrips.length) {
+            _selectedTripIndex = 0;
+          }
+          final hasTrips = displayTrips.isNotEmpty;
+          final selectedTrip = hasTrips
+              ? displayTrips[_selectedTripIndex]
+              : null;
           final screenHeight =
               MediaQuery.of(context).size.height -
               MediaQuery.of(context).padding.bottom;
@@ -44,33 +58,145 @@ class HomeScreen extends StatelessWidget {
                     left: 0,
                     right: 0,
                     height: headerHeight,
-                    child: _buildHeader(context, topPadding: pt),
+                    child: _buildHeaderBg(context, topPadding: pt),
                   ),
-                  Positioned(
+                  Positioned.fill(
                     top: bodyTop,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
                     child: ClipPath(
                       clipper: const _HomeWhiteBodyClipper(),
                       child: Container(color: const Color(0xFFF8F7FF)),
                     ),
                   ),
                   Positioned(
+                    top: pt + 8,
+                    left: 24,
+                    right: 24,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(25),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.menu,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(25),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.notifications_outlined,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    top: 116,
+                    left: 28,
+                    right: 28,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _greeting(),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Where to next?',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.white.withAlpha(180),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
                     top: cardTop,
                     left: 24,
                     right: 24,
-                    child: _buildFeaturedCard(
-                      context,
-                      featured,
-                      trips.isNotEmpty,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 160,
+                          child: PageView.builder(
+                            itemCount: hasTrips ? displayTrips.length : 1,
+                            onPageChanged: (index) {
+                              setState(() => _selectedTripIndex = index);
+                            },
+                            itemBuilder: (context, index) {
+                              final trip = hasTrips
+                                  ? displayTrips[index]
+                                  : null;
+                              return GestureDetector(
+                                onTap: () {
+                                  if (trip != null) {
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/trip-detail',
+                                      arguments: trip.id,
+                                    );
+                                  }
+                                },
+                                child: _buildFeaturedCard(
+                                  context,
+                                  trip,
+                                  hasTrips,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        if (hasTrips && displayTrips.length > 1)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(displayTrips.length, (i) {
+                                return AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                  ),
+                                  width: _selectedTripIndex == i ? 20 : 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: _selectedTripIndex == i
+                                        ? const Color(0xFF5B2BEA)
+                                        : const Color(0xFF5B2BEA).withAlpha(50),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                );
+                              }),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   Positioned(
                     top: gridTop,
                     left: 0,
                     right: 0,
-                    child: _buildModuleGrid(context, trips.isNotEmpty),
+                    child: _buildModuleGrid(context, selectedTrip, hasTrips),
                   ),
                 ],
               ),
@@ -81,7 +207,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, {double topPadding = 0}) {
+  Widget _buildHeaderBg(BuildContext context, {double topPadding = 0}) {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -91,62 +217,10 @@ class HomeScreen extends StatelessWidget {
           colors: [Color(0xFF32158F), Color(0xFF6A35F4)],
         ),
       ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(24, 8 + topPadding, 24, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.menu, color: Colors.white, size: 22),
-                ),
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.notifications_outlined,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Text(
-              _greeting(),
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Where to next?',
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.white.withAlpha(180),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildFeaturedCard(BuildContext context, dynamic trip, bool hasTrips) {
+  Widget _buildFeaturedCard(BuildContext context, Trip? trip, bool hasTrips) {
     return SizedBox(
       height: 160,
       child: Container(
@@ -247,7 +321,9 @@ class HomeScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  hasTrips ? trip.name : 'Plan Your First Trip',
+                                  hasTrips
+                                      ? trip!.name
+                                      : 'Plan Your First Trip',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -259,7 +335,7 @@ class HomeScreen extends StatelessWidget {
                                   hasTrips
                                       ? DateFormat(
                                           'MMM dd, yyyy',
-                                        ).format(trip.createdAt)
+                                        ).format(trip!.createdAt)
                                       : 'Create your adventure',
                                   style: TextStyle(
                                     color: Colors.white.withAlpha(180),
@@ -313,7 +389,11 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildModuleGrid(BuildContext context, bool hasTrips) {
+  Widget _buildModuleGrid(
+    BuildContext context,
+    Trip? selectedTrip,
+    bool hasTrips,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -333,7 +413,7 @@ class HomeScreen extends StatelessWidget {
                   context,
                   Icons.account_balance_wallet_outlined,
                   'Expenses',
-                  () => _navigateTripModule(context, hasTrips, 'expenses'),
+                  () => _navigateTripModule(context, selectedTrip, 'expenses'),
                 ),
               ),
               Expanded(
@@ -341,7 +421,8 @@ class HomeScreen extends StatelessWidget {
                   context,
                   Icons.emoji_events_outlined,
                   'Activities',
-                  () => _navigateTripModule(context, hasTrips, 'activities'),
+                  () =>
+                      _navigateTripModule(context, selectedTrip, 'activities'),
                 ),
               ),
             ],
@@ -354,7 +435,7 @@ class HomeScreen extends StatelessWidget {
                   context,
                   Icons.luggage_outlined,
                   'Packing',
-                  () => _navigateTripModule(context, hasTrips, 'packing'),
+                  () => _navigateTripModule(context, selectedTrip, 'packing'),
                 ),
               ),
               Expanded(
@@ -362,7 +443,7 @@ class HomeScreen extends StatelessWidget {
                   context,
                   Icons.flight_outlined,
                   'Flights',
-                  () => _navigateTripModule(context, hasTrips, 'flights'),
+                  () => _navigateTripModule(context, selectedTrip, 'flights'),
                 ),
               ),
               Expanded(
@@ -370,13 +451,7 @@ class HomeScreen extends StatelessWidget {
                   context,
                   Icons.description_outlined,
                   'Documents',
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Document Hub coming later'),
-                      ),
-                    );
-                  },
+                  () => _navigateTripModule(context, selectedTrip, 'documents'),
                 ),
               ),
             ],
@@ -439,8 +514,12 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  void _navigateTripModule(BuildContext context, bool hasTrips, String module) {
-    if (!hasTrips) {
+  void _navigateTripModule(
+    BuildContext context,
+    Trip? selectedTrip,
+    String module,
+  ) {
+    if (selectedTrip == null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Create a trip first')));
@@ -451,8 +530,9 @@ class HomeScreen extends StatelessWidget {
       'activities': '/activities',
       'packing': '/packing',
       'flights': '/flights',
+      'documents': '/documents',
     }[module]!;
-    Navigator.pushNamed(context, route);
+    Navigator.pushNamed(context, route, arguments: selectedTrip.id);
   }
 }
 
@@ -488,9 +568,9 @@ class _HomeWhiteBodyClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final path = Path()
-      ..moveTo(0, 45)
-      ..quadraticBezierTo(size.width * 0.16, 0, size.width * 0.34, 0)
-      ..lineTo(size.width, 0)
+      ..moveTo(0, 34)
+      ..quadraticBezierTo(size.width * 0.25, 0, size.width * 0.50, 0)
+      ..quadraticBezierTo(size.width * 0.75, 0, size.width, 34)
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();

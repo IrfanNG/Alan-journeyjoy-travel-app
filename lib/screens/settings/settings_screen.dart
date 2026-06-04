@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
+import '../../core/widgets/jj_back_button.dart';
+import '../../core/widgets/jj_bottom_nav.dart';
 import '../../providers/settings_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -12,6 +14,7 @@ class SettingsScreen extends StatelessWidget {
     final settingsProvider = context.watch<SettingsProvider>();
 
     return Scaffold(
+      backgroundColor: JJColors.lightBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -31,23 +34,7 @@ class SettingsScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(25),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.arrow_back,
-                              color: Colors.white, size: 20),
-                        ),
-                      ),
-                      const Spacer(),
-                    ],
-                  ),
+                  Row(children: [const JJBackButton(), const Spacer()]),
                   const SizedBox(height: 16),
                   SizedBox(
                     height: 80,
@@ -61,54 +48,69 @@ class SettingsScreen extends StatelessWidget {
                           child: CustomPaint(
                             size: const Size(300, 40),
                             painter: _HillPainter(
-                                color: Colors.white.withAlpha(15)),
+                              color: Colors.white.withAlpha(15),
+                            ),
                           ),
                         ),
                         Positioned(
                           top: 5,
                           left: 40,
-                          child: Icon(Icons.nights_stay,
-                              size: 22,
-                              color: Colors.white.withAlpha(60)),
+                          child: Icon(
+                            Icons.nights_stay,
+                            size: 22,
+                            color: Colors.white.withAlpha(60),
+                          ),
                         ),
                         Positioned(
                           top: 10,
                           right: 50,
-                          child: Icon(Icons.star,
-                              size: 10,
-                              color: Colors.white.withAlpha(50)),
+                          child: Icon(
+                            Icons.star,
+                            size: 10,
+                            color: Colors.white.withAlpha(50),
+                          ),
                         ),
                         Positioned(
                           top: 5,
                           right: 70,
-                          child: Icon(Icons.star,
-                              size: 6,
-                              color: Colors.white.withAlpha(35)),
+                          child: Icon(
+                            Icons.star,
+                            size: 6,
+                            color: Colors.white.withAlpha(35),
+                          ),
                         ),
                         Positioned(
                           bottom: 20,
                           left: 60,
-                          child: Icon(Icons.terrain,
-                              size: 28,
-                              color: Colors.white.withAlpha(30)),
+                          child: Icon(
+                            Icons.terrain,
+                            size: 28,
+                            color: Colors.white.withAlpha(30),
+                          ),
                         ),
                         Positioned(
                           bottom: 22,
                           right: 30,
-                          child: Icon(Icons.local_fire_department,
-                              size: 20,
-                              color: Colors.white.withAlpha(40)),
+                          child: Icon(
+                            Icons.local_fire_department,
+                            size: 20,
+                            color: Colors.white.withAlpha(40),
+                          ),
                         ),
                         Positioned(
                           top: 15,
                           left: 70,
-                          child: Icon(Icons.flight,
-                              size: 18,
-                              color: Colors.white.withAlpha(45)),
+                          child: Icon(
+                            Icons.flight,
+                            size: 18,
+                            color: Colors.white.withAlpha(45),
+                          ),
                         ),
-                        Icon(Icons.camera_alt,
-                            size: 32,
-                            color: Colors.white.withAlpha(60)),
+                        Icon(
+                          Icons.camera_alt,
+                          size: 32,
+                          color: Colors.white.withAlpha(60),
+                        ),
                       ],
                     ),
                   ),
@@ -134,8 +136,10 @@ class SettingsScreen extends StatelessWidget {
             ),
             Expanded(
               child: ListView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 children: [
                   _sectionHeader('Profile'),
                   const SizedBox(height: 8),
@@ -151,7 +155,9 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 4),
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: JJColors.cardBg,
                       borderRadius: BorderRadius.circular(18),
@@ -172,8 +178,11 @@ class SettingsScreen extends StatelessWidget {
                             color: JJColors.warningOrange.withAlpha(20),
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          child: const Icon(Icons.dark_mode_outlined,
-                              color: JJColors.warningOrange, size: 20),
+                          child: const Icon(
+                            Icons.dark_mode_outlined,
+                            color: JJColors.warningOrange,
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         const Expanded(
@@ -197,7 +206,9 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 4),
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: JJColors.cardBg,
                       borderRadius: BorderRadius.circular(18),
@@ -218,8 +229,11 @@ class SettingsScreen extends StatelessWidget {
                             color: JJColors.primaryPurple.withAlpha(20),
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          child: const Icon(Icons.notifications_outlined,
-                              color: JJColors.primaryPurple, size: 20),
+                          child: const Icon(
+                            Icons.notifications_outlined,
+                            color: JJColors.primaryPurple,
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         const Expanded(
@@ -244,8 +258,11 @@ class SettingsScreen extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right,
-                            color: JJColors.textMuted, size: 20),
+                        const Icon(
+                          Icons.chevron_right,
+                          color: JJColors.textMuted,
+                          size: 20,
+                        ),
                       ],
                     ),
                   ),
@@ -279,8 +296,27 @@ class SettingsScreen extends StatelessWidget {
                     iconColor: JJColors.errorRed,
                     onTap: () => _confirmClear(context),
                   ),
+                  const SizedBox(height: 24),
                 ],
               ),
+            ),
+            JJBottomNav(
+              currentIndex: 4,
+              onTap: (i) {
+                if (i == 0) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/home',
+                    (_) => false,
+                  );
+                } else if (i == 1) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/home',
+                    (_) => false,
+                  );
+                }
+              },
             ),
           ],
         ),
@@ -334,8 +370,11 @@ class SettingsScreen extends StatelessWidget {
                 color: (iconColor ?? JJColors.primaryPurple).withAlpha(20),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(icon,
-                  color: iconColor ?? JJColors.primaryPurple, size: 20),
+              child: Icon(
+                icon,
+                color: iconColor ?? JJColors.primaryPurple,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -361,8 +400,11 @@ class SettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right,
-                color: JJColors.textMuted, size: 20),
+            const Icon(
+              Icons.chevron_right,
+              color: JJColors.textMuted,
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -396,8 +438,7 @@ class SettingsScreen extends StatelessWidget {
               color: JJColors.primaryPurple.withAlpha(20),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon,
-                color: JJColors.primaryPurple, size: 20),
+            child: Icon(icon, color: JJColors.primaryPurple, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -423,8 +464,7 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.chevron_right,
-              color: JJColors.textMuted, size: 20),
+          const Icon(Icons.chevron_right, color: JJColors.textMuted, size: 20),
         ],
       ),
     );
@@ -432,12 +472,12 @@ class SettingsScreen extends StatelessWidget {
 
   void _showUsernameDialog(BuildContext context) {
     final controller = TextEditingController(
-        text: context.read<SettingsProvider>().settings.username ?? '');
+      text: context.read<SettingsProvider>().settings.username ?? '',
+    );
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text('Set Username'),
         content: TextField(
           controller: controller,
@@ -445,7 +485,7 @@ class SettingsScreen extends StatelessWidget {
           decoration: InputDecoration(
             hintText: 'Enter your name',
             filled: true,
-            fillColor: JJColors.lightBg,
+            fillColor: Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -465,8 +505,10 @@ class SettingsScreen extends StatelessWidget {
               }
               Navigator.pop(ctx);
             },
-            child: const Text('Save',
-                style: TextStyle(color: JJColors.primaryPurple)),
+            child: const Text(
+              'Save',
+              style: TextStyle(color: JJColors.primaryPurple),
+            ),
           ),
         ],
       ),
@@ -477,11 +519,11 @@ class SettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text('Clear All Data'),
         content: const Text(
-            'This will remove all your trips, expenses, flights, activities, and packing items. This cannot be undone.'),
+          'This will remove all your trips, expenses, flights, activities, and packing items. This cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -492,10 +534,15 @@ class SettingsScreen extends StatelessWidget {
               context.read<SettingsProvider>().clearCache();
               Navigator.pop(ctx);
               Navigator.pushNamedAndRemoveUntil(
-                  context, '/welcome', (route) => false);
+                context,
+                '/welcome',
+                (route) => false,
+              );
             },
-            child: const Text('Clear',
-                style: TextStyle(color: JJColors.errorRed)),
+            child: const Text(
+              'Clear',
+              style: TextStyle(color: JJColors.errorRed),
+            ),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
+import '../../core/widgets/jj_back_button.dart';
 import '../../providers/trip_provider.dart';
 
 class AddTripScreen extends StatefulWidget {
@@ -74,26 +75,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
               child: Container(color: JJColors.lightBg),
             ),
           ),
-          Positioned(
-            top: pt + 18,
-            left: 24,
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(24),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ),
-            ),
-          ),
+          Positioned(top: pt + 18, left: 24, child: const JJBackButton()),
           Positioned(
             top: pt + 22,
             right: 28,
@@ -290,6 +272,8 @@ class _TripNameField extends StatelessWidget {
             color: JJColors.textMuted.withAlpha(145),
             fontSize: 14,
           ),
+          filled: true,
+          fillColor: Colors.white,
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
