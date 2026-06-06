@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../providers/settings_provider.dart';
-import '../../../core/widgets/jj_back_button.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../core/widgets/jj_back_button.dart';
 import 'widgets/auth_hero_banner.dart';
 import 'widgets/auth_primary_button.dart';
 import 'widgets/auth_text_field.dart';
@@ -30,7 +31,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _handleSignUp() {
+  Future<void> _handleSignUp() async {
     final fields = [
       _emailController.text.trim(),
       _usernameController.text.trim(),
@@ -59,8 +60,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    context.read<SettingsProvider>().markWelcomeSeen();
-    Navigator.pushReplacementNamed(context, '/home');
+    final auth = context.read<AuthProvider>();
+    final success = await auth.register(
+      _emailController.text.trim(),
+      _passwordController.text,
+      _usernameController.text.trim(),
+    );
+    if (!mounted) return;
+    if (success) {
+      context.read<SettingsProvider>().markWelcomeSeen();
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.error ?? 'Registration failed')),
+      );
+    }
   }
 
   @override

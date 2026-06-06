@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,7 +20,16 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigate() async {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/welcome');
+    try {
+      final auth = context.read<AuthProvider>();
+      if (auth.isAuthenticated) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        Navigator.pushReplacementNamed(context, '/welcome');
+      }
+    } catch (_) {
+      Navigator.pushReplacementNamed(context, '/welcome');
+    }
   }
 
   @override

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../app/theme.dart';
 import '../../core/widgets/jj_back_button.dart';
 import '../../core/widgets/jj_bottom_nav.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/trip_provider.dart';
 
@@ -297,6 +298,13 @@ class SettingsScreen extends StatelessWidget {
                     iconColor: JJColors.errorRed,
                     onTap: () => _confirmClear(context),
                   ),
+                  _settingTile(
+                    icon: Icons.logout,
+                    title: 'Sign Out',
+                    subtitle: 'Sign out of your account',
+                    iconColor: JJColors.errorRed,
+                    onTap: () => _confirmLogout(context),
+                  ),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -530,6 +538,38 @@ class SettingsScreen extends StatelessWidget {
             child: const Text(
               'Save',
               style: TextStyle(color: JJColors.primaryPurple),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<AuthProvider>().logout();
+              Navigator.pop(ctx);
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/welcome',
+                (route) => false,
+              );
+            },
+            child: const Text(
+              'Sign Out',
+              style: TextStyle(color: JJColors.errorRed),
             ),
           ),
         ],

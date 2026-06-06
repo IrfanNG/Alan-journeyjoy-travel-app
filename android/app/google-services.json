@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "141828214100",
+    "project_id": "journey-joy-dbc69",
+    "storage_bucket": "journey-joy-dbc69.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:141828214100:android:4d7e781ab8eeeaf004ccc1",
+        "android_client_info": {
+          "package_name": "com.journeyjoy.journey_joy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2tc0jwWCc9DMwyt3oLsZ05Y8JOzjd8a8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

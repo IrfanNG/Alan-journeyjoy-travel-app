@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../providers/settings_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/settings_provider.dart';
 import 'widgets/auth_hero_banner.dart';
 import 'widgets/auth_primary_button.dart';
 import 'widgets/auth_text_field.dart';
@@ -25,15 +26,27 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
       );
       return;
     }
-    context.read<SettingsProvider>().markWelcomeSeen();
-    Navigator.pushReplacementNamed(context, '/home');
+    final auth = context.read<AuthProvider>();
+    final success = await auth.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+    if (!mounted) return;
+    if (success) {
+      context.read<SettingsProvider>().markWelcomeSeen();
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.error ?? 'Login failed')),
+      );
+    }
   }
 
   @override

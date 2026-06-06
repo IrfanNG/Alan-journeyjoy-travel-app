@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import '../../app/theme.dart';
 import '../../core/widgets/jj_back_button.dart';
 import '../../core/widgets/jj_bottom_nav.dart';
+import '../../data/models/currency_model.dart';
 import '../../providers/expense_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../providers/trip_provider.dart';
 import 'add_expense_screen.dart';
 
@@ -28,11 +30,13 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       tripId = tp.trips.isNotEmpty ? tp.trips.first.id : '';
     }
     final expenseProvider = context.watch<ExpenseProvider>();
+    final settingsProvider = context.watch<SettingsProvider>();
     final tripExpenses = expenseProvider.getExpensesForTrip(tripId);
     final totalSpent = expenseProvider.getTotalForTrip(tripId);
     final categoryTotals = expenseProvider.getCategoryTotals(tripId);
     final hasData = totalSpent > 0;
     final pt = MediaQuery.of(context).padding.top;
+    final currency = currencyFromCode(settingsProvider.currencyCode);
 
     const categories = [
       'Food',
@@ -123,16 +127,50 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Total Spent',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white.withAlpha(200),
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  'Total Spent',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white.withAlpha(200),
+                                  ),
+                                ),
+                                const Spacer(),
+                                GestureDetector(
+                                  onTap: () => _showCurrencySelector(context, settingsProvider),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withAlpha(25),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          '${currency.code} ${currency.symbol}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          Icons.arrow_drop_down,
+                                          size: 16,
+                                          color: Colors.white.withAlpha(180),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '\$${totalSpent.toStringAsFixed(2)}',
+                              currency.format(totalSpent),
                               style: const TextStyle(
                                 fontSize: 30,
                                 fontWeight: FontWeight.w800,
@@ -195,7 +233,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                                 ),
                                               ),
                                               Text(
-                                                '\$${catTotal.toStringAsFixed(0)}',
+                                                currency.format(catTotal),
                                                 style: const TextStyle(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w600,
@@ -231,11 +269,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                     )
                                     .toList();
                                 if (filtered.isNotEmpty) {
-                                  _showExpenseItems(
-                                    context,
-                                    filtered,
-                                    categories[index],
-                                  );
+                                  _showExpenseItems(context, filtered, categories[index], currency, settingsProvider);
                                 }
                               }
                             : null,
@@ -276,7 +310,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                 ),
                               ),
                               Text(
-                                '\$${catTotal.toStringAsFixed(0)}',
+                                currency.format(catTotal),
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
@@ -349,6 +383,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     BuildContext context,
     List<dynamic> expenses,
     String category,
+    CurrencyOption currency,
+    SettingsProvider settingsProvider,
   ) {
     showModalBottomSheet(
       context: context,
@@ -386,7 +422,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                         ),
                       ),
                       Text(
-                        '\$${e.amount.toStringAsFixed(0)}',
+                        currency.format(e.amount),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -463,6 +499,64 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         const SnackBar(content: Text('Expense deleted')),
       );
     }
+  }
+
+  void _showCurrencySelector(BuildContext context, SettingsProvider settingsProvider) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Select Currency',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: JJColors.textDark,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...supportedCurrencies.map((c) => ListTile(
+                leading: Text(
+                  c.symbol,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: JJColors.textDark,
+                  ),
+                ),
+                title: Text(
+                  '${c.code} - ${c.name}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: JJColors.textDark,
+                  ),
+                ),
+                subtitle: Text(
+                  c.country,
+                  style: const TextStyle(fontSize: 12, color: JJColors.textMuted),
+                ),
+                trailing: settingsProvider.currencyCode == c.code
+                    ? const Icon(Icons.check, color: JJColors.primaryPurple)
+                    : null,
+                onTap: () {
+                  settingsProvider.setCurrency(c.code);
+                  Navigator.pop(sheetContext);
+                },
+              )),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
 import '../../core/widgets/jj_back_button.dart';
+import '../../data/models/currency_model.dart';
 import '../../providers/expense_provider.dart';
+import '../../providers/settings_provider.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -85,6 +87,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     final tripId = ModalRoute.of(context)!.settings.arguments as String;
+    final currency = currencyFromCode(context.watch<SettingsProvider>().currencyCode);
     return Scaffold(
       backgroundColor: JJColors.lightBg,
       body: SafeArea(
@@ -205,7 +208,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         controller: _amountController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          hintText: '\$ 0.00',
+                          hintText: '${currency.symbol} 0${currency.hasDecimals ? '.00' : ''}' ,
                           hintStyle: TextStyle(
                             color: JJColors.textMuted.withAlpha(80),
                           ),

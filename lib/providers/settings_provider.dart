@@ -15,6 +15,8 @@ class SettingsProvider extends ChangeNotifier {
 
   bool get isDarkMode => _settings.darkModeEnabled;
 
+  String get currencyCode => _settings.currencyCode;
+
   void setUsername(String name) {
     _settings.username = name;
     LocalStorageService.saveSettings(_settings);
@@ -23,6 +25,12 @@ class SettingsProvider extends ChangeNotifier {
 
   void setDarkMode(bool value) {
     _settings.darkModeEnabled = value;
+    LocalStorageService.saveSettings(_settings);
+    notifyListeners();
+  }
+
+  void setCurrency(String code) {
+    _settings.currencyCode = code;
     LocalStorageService.saveSettings(_settings);
     notifyListeners();
   }

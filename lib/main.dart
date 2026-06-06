@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'app/routes.dart';
 import 'app/theme.dart';
 import 'data/services/local_storage_service.dart';
+import 'firebase_options.dart';
 import 'providers/activity_provider.dart';
+import 'providers/auth_provider.dart';
 import 'providers/expense_provider.dart';
 import 'providers/flight_provider.dart';
 import 'providers/packing_provider.dart';
@@ -13,6 +16,9 @@ import 'providers/trip_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await LocalStorageService.init();
   runApp(const JourneyJoyApp());
 }
@@ -55,6 +61,7 @@ class JourneyJoyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => TripProvider()..loadTrips()),
         ChangeNotifierProvider(create: (_) => ExpenseProvider()..loadExpenses()),
         ChangeNotifierProvider(create: (_) => FlightProvider()..loadFlights()),
