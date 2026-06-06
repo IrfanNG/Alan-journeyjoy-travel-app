@@ -518,12 +518,16 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 28),
           Row(
             children: [
-              _circleModule(
-                context,
-                Icons.settings_outlined,
-                'Settings',
-                () => Navigator.pushNamed(context, '/settings'),
+              Expanded(
+                child: _circleModule(
+                  context,
+                  Icons.settings_outlined,
+                  'Settings',
+                  () => Navigator.pushNamed(context, '/settings'),
+                ),
               ),
+              const Expanded(child: SizedBox.shrink()),
+              const Expanded(child: SizedBox.shrink()),
             ],
           ),
         ],

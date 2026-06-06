@@ -241,6 +241,14 @@ class _PackingScreenState extends State<PackingScreen> {
                                   ),
                                 ),
                               ),
+                              IconButton(
+                                onPressed: () => _confirmDeleteItem(context, item.id),
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: JJColors.errorRed,
+                                  size: 20,
+                                ),
+                              ),
                             ],
                           ),
                         );
@@ -427,5 +435,37 @@ class _PackingScreenState extends State<PackingScreen> {
             )
           : null,
     );
+  }
+
+  Future<void> _confirmDeleteItem(BuildContext context, String itemId) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<PackingProvider>();
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete item?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: JJColors.errorRed),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true && mounted) {
+      provider.deleteItem(itemId);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Packing item deleted')),
+      );
+    }
   }
 }

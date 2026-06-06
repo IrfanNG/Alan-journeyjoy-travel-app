@@ -233,6 +233,17 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                     size: 20,
                                   ),
                                 ),
+                                IconButton(
+                                  onPressed: () => _confirmDeleteActivity(
+                                    context,
+                                    activity.id,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: JJColors.errorRed,
+                                    size: 20,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -444,5 +455,40 @@ class _ActivityScreenState extends State<ActivityScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDeleteActivity(
+    BuildContext context,
+    String activityId,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<ActivityProvider>();
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete item?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: JJColors.errorRed),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true && mounted) {
+      provider.deleteActivity(activityId);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Activity deleted')),
+      );
+    }
   }
 }

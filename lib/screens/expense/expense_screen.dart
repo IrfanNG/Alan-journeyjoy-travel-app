@@ -371,7 +371,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              ...expenses.map(
+                      ...expenses.map(
                 (e) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
@@ -391,6 +391,17 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: JJColors.textDark,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => _confirmDeleteExpense(
+                          context,
+                          e.id,
+                        ),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: JJColors.errorRed,
+                          size: 20,
                         ),
                       ),
                     ],
@@ -416,6 +427,41 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         return Icons.hotel;
       default:
         return Icons.receipt_long;
+    }
+  }
+
+  Future<void> _confirmDeleteExpense(
+    BuildContext context,
+    String expenseId,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<ExpenseProvider>();
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete item?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: JJColors.errorRed),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true && mounted) {
+      provider.deleteExpense(expenseId);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Expense deleted')),
+      );
     }
   }
 }

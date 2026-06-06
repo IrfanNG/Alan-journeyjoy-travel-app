@@ -282,6 +282,16 @@ void main() {
       provider.deleteExpense(provider.getExpensesForTrip('trip1').first.id);
       expect(provider.getExpensesForTrip('trip1'), isEmpty);
     });
+
+    test('E6. Expense delete persists after reload', () {
+      final provider = ExpenseProvider()..loadExpenses();
+      provider.addExpense('trip1', 'Lunch', 25.50, 'Food');
+      final id = provider.getExpensesForTrip('trip1').first.id;
+      provider.deleteExpense(id);
+
+      final reloaded = ExpenseProvider()..loadExpenses();
+      expect(reloaded.getExpensesForTrip('trip1'), isEmpty);
+    });
   });
 
   // ============================================================
@@ -308,6 +318,17 @@ void main() {
 
       expect(provider.getFlightsForTrip('trip1'), hasLength(2));
     });
+
+    test('F3. Flight delete persists after reload', () {
+      final provider = FlightProvider()..loadFlights();
+      provider.addFlight('trip1', 'JJ123', 'Journey Air', 'KUL', 'NRT',
+          DateTime.now(), DateTime.now().add(const Duration(hours: 7)));
+      final id = provider.getFlightsForTrip('trip1').first.id;
+      provider.deleteFlight(id);
+
+      final reloaded = FlightProvider()..loadFlights();
+      expect(reloaded.getFlightsForTrip('trip1'), isEmpty);
+    });
   });
 
   // ============================================================
@@ -323,6 +344,17 @@ void main() {
       expect(provider.getActivitiesForTrip('trip1'), hasLength(1));
       expect(
           provider.getActivitiesForTrip('trip1').first.name, 'Visit Shrine');
+    });
+
+    test('G2. Activity delete persists after reload', () {
+      final provider = ActivityProvider()..loadActivities();
+      provider.addActivity(
+          'trip1', 'Visit Shrine', null, DateTime.now(), null, null);
+      final id = provider.getActivitiesForTrip('trip1').first.id;
+      provider.deleteActivity(id);
+
+      final reloaded = ActivityProvider()..loadActivities();
+      expect(reloaded.getActivitiesForTrip('trip1'), isEmpty);
     });
   });
 
@@ -373,6 +405,16 @@ void main() {
       final id = provider.getItemsForTrip('trip1').first.id;
       provider.deleteItem(id);
       expect(provider.getItemsForTrip('trip1'), isEmpty);
+    });
+
+    test('H5. Packing delete persists after reload', () {
+      final provider = PackingProvider()..loadItems();
+      provider.addItem('trip1', 'Passport');
+      final id = provider.getItemsForTrip('trip1').first.id;
+      provider.deleteItem(id);
+
+      final reloaded = PackingProvider()..loadItems();
+      expect(reloaded.getItemsForTrip('trip1'), isEmpty);
     });
   });
 
