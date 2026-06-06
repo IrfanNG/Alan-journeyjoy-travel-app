@@ -3,9 +3,13 @@ import 'package:uuid/uuid.dart';
 
 import '../data/models/expense_model.dart';
 import '../data/services/local_storage_service.dart';
+import '../data/services/sync_service.dart';
 
 class ExpenseProvider extends ChangeNotifier {
+  final SyncService? _syncService;
   List<Expense> _expenses = [];
+
+  ExpenseProvider({SyncService? syncService}) : _syncService = syncService;
 
   void loadExpenses() {
     _expenses = LocalStorageService.getExpenses();
@@ -29,7 +33,8 @@ class ExpenseProvider extends ChangeNotifier {
     return totals;
   }
 
-  void addExpense(String tripId, String itemName, double amount, String category) {
+  void addExpense(
+      String tripId, String itemName, double amount, String category) {
     final expense = Expense(
       id: const Uuid().v4(),
       tripId: tripId,
@@ -40,12 +45,26 @@ class ExpenseProvider extends ChangeNotifier {
     _expenses.add(expense);
     LocalStorageService.saveExpenses(_expenses);
     notifyListeners();
+    _syncService?.syncCreate(
+      entityType: 'expenses',
+      tripId: tripId,
+      entityId: expense.id,
+      data: expense.toMap(),
+    );
   }
 
   void deleteExpense(String id) {
-    _expenses.removeWhere((e) => e.id == id);
+    final index = _expenses.indexWhere((e) => e.id == id);
+    if (index == -1) return;
+    final tripId = _expenses[index].tripId;
+    _expenses.removeAt(index);
     LocalStorageService.saveExpenses(_expenses);
     notifyListeners();
+    _syncService?.syncDelete(
+      entityType: 'expenses',
+      tripId: tripId,
+      entityId: id,
+    );
   }
 
   void deleteByTripId(String tripId) {

@@ -16,6 +16,7 @@ class LocalStorageService {
   static late Box _activityBox;
   static late Box _packingBox;
   static late Box _settingsBox;
+  static late Box _pendingBox;
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -34,6 +35,29 @@ class LocalStorageService {
     _activityBox = await Hive.openBox('activities');
     _packingBox = await Hive.openBox('packing');
     _settingsBox = await Hive.openBox('settings');
+    _pendingBox = await Hive.openBox('pending');
+  }
+
+  static List<Map<String, dynamic>> _getPendingList() {
+    final data = _pendingBox.get('changes');
+    if (data == null) return [];
+    return (jsonDecode(data) as List).cast<Map<String, dynamic>>();
+  }
+
+  static void addPendingChange(Map<String, dynamic> change) {
+    final changes = _getPendingList();
+    changes.add(change);
+    _pendingBox.put('changes', jsonEncode(changes));
+  }
+
+  static List<Map<String, dynamic>> getRawPendingChanges() {
+    return _getPendingList();
+  }
+
+  static void removePendingChange(String entityId) {
+    final changes = _getPendingList();
+    changes.removeWhere((c) => c['entityId'] == entityId);
+    _pendingBox.put('changes', jsonEncode(changes));
   }
 
   static List<Trip> getTrips() {
@@ -121,5 +145,7 @@ class LocalStorageService {
     await _activityBox.clear();
     await _packingBox.clear();
     await _settingsBox.clear();
+    await _pendingBox.clear();
   }
 }
+

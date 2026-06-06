@@ -3,9 +3,13 @@ import 'package:uuid/uuid.dart';
 
 import '../data/models/packing_item_model.dart';
 import '../data/services/local_storage_service.dart';
+import '../data/services/sync_service.dart';
 
 class PackingProvider extends ChangeNotifier {
+  final SyncService? _syncService;
   List<PackingItem> _items = [];
+
+  PackingProvider({SyncService? syncService}) : _syncService = syncService;
 
   void loadItems() {
     _items = LocalStorageService.getPackingItems();
@@ -32,21 +36,42 @@ class PackingProvider extends ChangeNotifier {
     _items.add(item);
     LocalStorageService.savePackingItems(_items);
     notifyListeners();
+    _syncService?.syncCreate(
+      entityType: 'packing',
+      tripId: tripId,
+      entityId: item.id,
+      data: item.toMap(),
+    );
   }
 
   void toggleItem(String id) {
     final index = _items.indexWhere((i) => i.id == id);
     if (index != -1) {
       _items[index].isPacked = !_items[index].isPacked;
+      _items[index].updatedAt = DateTime.now();
       LocalStorageService.savePackingItems(_items);
       notifyListeners();
+      _syncService?.syncUpdate(
+        entityType: 'packing',
+        tripId: _items[index].tripId,
+        entityId: id,
+        data: _items[index].toMap(),
+      );
     }
   }
 
   void deleteItem(String id) {
-    _items.removeWhere((i) => i.id == id);
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index == -1) return;
+    final tripId = _items[index].tripId;
+    _items.removeAt(index);
     LocalStorageService.savePackingItems(_items);
     notifyListeners();
+    _syncService?.syncDelete(
+      entityType: 'packing',
+      tripId: tripId,
+      entityId: id,
+    );
   }
 
   void deleteByTripId(String tripId) {

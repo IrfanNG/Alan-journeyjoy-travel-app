@@ -7,6 +7,7 @@ class Flight {
   String toLocation;
   DateTime departureTime;
   DateTime arrivalTime;
+  DateTime updatedAt;
 
   Flight({
     required this.id,
@@ -17,7 +18,8 @@ class Flight {
     required this.toLocation,
     required this.departureTime,
     required this.arrivalTime,
-  });
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -28,6 +30,7 @@ class Flight {
         'toLocation': toLocation,
         'departureTime': departureTime.toIso8601String(),
         'arrivalTime': arrivalTime.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
       };
 
   factory Flight.fromMap(Map<String, dynamic> map) => Flight(
@@ -39,5 +42,8 @@ class Flight {
         toLocation: map['toLocation'] as String,
         departureTime: DateTime.parse(map['departureTime'] as String),
         arrivalTime: DateTime.parse(map['arrivalTime'] as String),
+        updatedAt: map['updatedAt'] != null
+            ? DateTime.parse(map['updatedAt'] as String)
+            : null,
       );
 }

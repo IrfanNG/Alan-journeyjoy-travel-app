@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'app/routes.dart';
 import 'app/theme.dart';
 import 'data/services/local_storage_service.dart';
+import 'data/services/sync_service.dart';
 import 'firebase_options.dart';
 import 'providers/activity_provider.dart';
 import 'providers/auth_provider.dart';
@@ -23,8 +24,27 @@ void main() async {
   runApp(const JourneyJoyApp());
 }
 
-class JourneyJoyApp extends StatelessWidget {
+class JourneyJoyApp extends StatefulWidget {
   const JourneyJoyApp({super.key});
+
+  @override
+  State<JourneyJoyApp> createState() => _JourneyJoyAppState();
+}
+
+class _JourneyJoyAppState extends State<JourneyJoyApp> {
+  late final SyncService _syncService;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncService = SyncService();
+  }
+
+  @override
+  void dispose() {
+    _syncService.dispose();
+    super.dispose();
+  }
 
   Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
     final builder = AppRoutes.routes[settings.name];
@@ -62,12 +82,24 @@ class JourneyJoyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => TripProvider()..loadTrips()),
-        ChangeNotifierProvider(create: (_) => ExpenseProvider()..loadExpenses()),
-        ChangeNotifierProvider(create: (_) => FlightProvider()..loadFlights()),
-        ChangeNotifierProvider(create: (_) => ActivityProvider()..loadActivities()),
-        ChangeNotifierProvider(create: (_) => PackingProvider()..loadItems()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()..loadSettings()),
+        ChangeNotifierProvider(
+            create: (_) => TripProvider(syncService: _syncService)
+              ..loadTrips()),
+        ChangeNotifierProvider(
+            create: (_) => ExpenseProvider(syncService: _syncService)
+              ..loadExpenses()),
+        ChangeNotifierProvider(
+            create: (_) => FlightProvider(syncService: _syncService)
+              ..loadFlights()),
+        ChangeNotifierProvider(
+            create: (_) => ActivityProvider(syncService: _syncService)
+              ..loadActivities()),
+        ChangeNotifierProvider(
+            create: (_) => PackingProvider(syncService: _syncService)
+              ..loadItems()),
+        ChangeNotifierProvider(
+            create: (_) => SettingsProvider(syncService: _syncService)
+              ..loadSettings()),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, child) {

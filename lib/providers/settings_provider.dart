@@ -2,9 +2,13 @@ import 'package:flutter/foundation.dart';
 
 import '../data/models/app_settings_model.dart';
 import '../data/services/local_storage_service.dart';
+import '../data/services/sync_service.dart';
 
 class SettingsProvider extends ChangeNotifier {
+  final SyncService? _syncService;
   late AppSettings _settings;
+
+  SettingsProvider({SyncService? syncService}) : _syncService = syncService;
 
   AppSettings get settings => _settings;
 
@@ -19,26 +23,50 @@ class SettingsProvider extends ChangeNotifier {
 
   void setUsername(String name) {
     _settings.username = name;
+    _settings.updatedAt = DateTime.now();
     LocalStorageService.saveSettings(_settings);
     notifyListeners();
+    _syncService?.syncUpdate(
+      entityType: 'settings',
+      entityId: 'app',
+      data: _settings.toMap(),
+    );
   }
 
   void setDarkMode(bool value) {
     _settings.darkModeEnabled = value;
+    _settings.updatedAt = DateTime.now();
     LocalStorageService.saveSettings(_settings);
     notifyListeners();
+    _syncService?.syncUpdate(
+      entityType: 'settings',
+      entityId: 'app',
+      data: _settings.toMap(),
+    );
   }
 
   void setCurrency(String code) {
     _settings.currencyCode = code;
+    _settings.updatedAt = DateTime.now();
     LocalStorageService.saveSettings(_settings);
     notifyListeners();
+    _syncService?.syncUpdate(
+      entityType: 'settings',
+      entityId: 'app',
+      data: _settings.toMap(),
+    );
   }
 
   void markWelcomeSeen() {
     _settings.hasSeenWelcome = true;
+    _settings.updatedAt = DateTime.now();
     LocalStorageService.saveSettings(_settings);
     notifyListeners();
+    _syncService?.syncUpdate(
+      entityType: 'settings',
+      entityId: 'app',
+      data: _settings.toMap(),
+    );
   }
 
   Future<void> clearCache() async {

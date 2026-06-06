@@ -3,9 +3,13 @@ import 'package:uuid/uuid.dart';
 
 import '../data/models/activity_model.dart';
 import '../data/services/local_storage_service.dart';
+import '../data/services/sync_service.dart';
 
 class ActivityProvider extends ChangeNotifier {
+  final SyncService? _syncService;
   List<Activity> _activities = [];
+
+  ActivityProvider({SyncService? syncService}) : _syncService = syncService;
 
   void loadActivities() {
     _activities = LocalStorageService.getActivities();
@@ -36,12 +40,26 @@ class ActivityProvider extends ChangeNotifier {
     _activities.add(activity);
     LocalStorageService.saveActivities(_activities);
     notifyListeners();
+    _syncService?.syncCreate(
+      entityType: 'activities',
+      tripId: tripId,
+      entityId: activity.id,
+      data: activity.toMap(),
+    );
   }
 
   void deleteActivity(String id) {
-    _activities.removeWhere((a) => a.id == id);
+    final index = _activities.indexWhere((a) => a.id == id);
+    if (index == -1) return;
+    final tripId = _activities[index].tripId;
+    _activities.removeAt(index);
     LocalStorageService.saveActivities(_activities);
     notifyListeners();
+    _syncService?.syncDelete(
+      entityType: 'activities',
+      tripId: tripId,
+      entityId: id,
+    );
   }
 
   void deleteByTripId(String tripId) {

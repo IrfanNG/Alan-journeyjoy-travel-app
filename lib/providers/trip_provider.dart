@@ -3,9 +3,13 @@ import 'package:uuid/uuid.dart';
 
 import '../data/models/trip_model.dart';
 import '../data/services/local_storage_service.dart';
+import '../data/services/sync_service.dart';
 
 class TripProvider extends ChangeNotifier {
+  final SyncService? _syncService;
   List<Trip> _trips = [];
+
+  TripProvider({SyncService? syncService}) : _syncService = syncService;
 
   List<Trip> get trips => _trips;
 
@@ -23,6 +27,11 @@ class TripProvider extends ChangeNotifier {
     _trips.add(trip);
     LocalStorageService.saveTrips(_trips);
     notifyListeners();
+    _syncService?.syncCreate(
+      entityType: 'trips',
+      entityId: trip.id,
+      data: trip.toMap(),
+    );
     return trip;
   }
 
@@ -30,6 +39,10 @@ class TripProvider extends ChangeNotifier {
     _trips.removeWhere((t) => t.id == id);
     LocalStorageService.saveTrips(_trips);
     notifyListeners();
+    _syncService?.syncDelete(
+      entityType: 'trips',
+      entityId: id,
+    );
   }
 
   Trip? getTripById(String id) {

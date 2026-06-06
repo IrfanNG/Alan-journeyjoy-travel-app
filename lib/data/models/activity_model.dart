@@ -6,6 +6,7 @@ class Activity {
   DateTime date;
   String? timeText;
   String? referenceLink;
+  DateTime updatedAt;
 
   Activity({
     required this.id,
@@ -15,7 +16,8 @@ class Activity {
     required this.date,
     this.timeText,
     this.referenceLink,
-  });
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -25,6 +27,7 @@ class Activity {
         'date': date.toIso8601String(),
         'timeText': timeText,
         'referenceLink': referenceLink,
+        'updatedAt': updatedAt.toIso8601String(),
       };
 
   factory Activity.fromMap(Map<String, dynamic> map) => Activity(
@@ -35,5 +38,8 @@ class Activity {
         date: DateTime.parse(map['date'] as String),
         timeText: map['timeText'] as String?,
         referenceLink: map['referenceLink'] as String?,
+        updatedAt: map['updatedAt'] != null
+            ? DateTime.parse(map['updatedAt'] as String)
+            : null,
       );
 }

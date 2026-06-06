@@ -5,6 +5,7 @@ class Expense {
   double amount;
   String category;
   DateTime createdAt;
+  DateTime updatedAt;
 
   Expense({
     required this.id,
@@ -13,7 +14,9 @@ class Expense {
     required this.amount,
     this.category = 'Other',
     DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+    DateTime? updatedAt,
+  })  : createdAt = createdAt ?? DateTime.now(),
+        updatedAt = updatedAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -22,6 +25,7 @@ class Expense {
         'amount': amount,
         'category': category,
         'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
       };
 
   factory Expense.fromMap(Map<String, dynamic> map) => Expense(
@@ -31,6 +35,9 @@ class Expense {
         amount: (map['amount'] as num).toDouble(),
         category: map['category'] as String? ?? 'Other',
         createdAt: DateTime.parse(map['createdAt'] as String),
+        updatedAt: map['updatedAt'] != null
+            ? DateTime.parse(map['updatedAt'] as String)
+            : null,
       );
 }
 

@@ -1,0 +1,352 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+
+import '../../services/auth_service.dart';
+import '../models/activity_model.dart';
+import '../models/expense_model.dart';
+import '../models/flight_model.dart';
+import '../models/packing_item_model.dart';
+import '../models/trip_model.dart';
+import 'local_storage_service.dart';
+import 'remote_data_source.dart';
+
+enum SyncStatus { idle, syncing, error }
+
+class PendingChange {
+  final String entityType;
+  final String? tripId;
+  final String entityId;
+  final String action;
+  final Map<String, dynamic>? data;
+  final DateTime timestamp;
+
+  PendingChange({
+    required this.entityType,
+    this.tripId,
+    required this.entityId,
+    required this.action,
+    this.data,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+
+  Map<String, dynamic> toMap() => {
+        'entityType': entityType,
+        'tripId': tripId,
+        'entityId': entityId,
+        'action': action,
+        'data': data,
+        'timestamp': timestamp.toIso8601String(),
+      };
+
+  factory PendingChange.fromMap(Map<String, dynamic> map) => PendingChange(
+        entityType: map['entityType'] as String,
+        tripId: map['tripId'] as String?,
+        entityId: map['entityId'] as String,
+        action: map['action'] as String,
+        data: map['data'] as Map<String, dynamic>?,
+        timestamp: DateTime.parse(map['timestamp'] as String),
+      );
+}
+
+class SyncService {
+  final RemoteDataSource _remoteDataSource;
+  final AuthService _authService;
+  final Connectivity _connectivity;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
+  bool _isOnline = true;
+  SyncStatus _status = SyncStatus.idle;
+
+  SyncService({
+    RemoteDataSource? remoteDataSource,
+    AuthService? authService,
+    Connectivity? connectivity,
+  })  : _remoteDataSource = remoteDataSource ?? RemoteDataSource(),
+        _authService = authService ?? AuthService(),
+        _connectivity = connectivity ?? Connectivity() {
+    _initConnectivity();
+  }
+
+  SyncStatus get status => _status;
+  bool get isOnline => _isOnline;
+
+  String? get _uid {
+    try {
+      return _authService.currentUser?.uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool get canSync {
+    try {
+      return _isOnline && _authService.currentUser != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _initConnectivity() {
+    _connectivity.checkConnectivity().then((result) {
+      _isOnline = !result.contains(ConnectivityResult.none);
+    });
+    _connectivitySub =
+        _connectivity.onConnectivityChanged.listen((result) {
+      final wasOffline = !_isOnline;
+      _isOnline = !result.contains(ConnectivityResult.none);
+      if (wasOffline && _isOnline) {
+        _processPendingChanges();
+      }
+    });
+  }
+
+  Future<void> syncCreate({
+    required String entityType,
+    String? tripId,
+    required String entityId,
+    required Map<String, dynamic> data,
+  }) async {
+    if (!canSync) {
+      _addPendingChange('create', entityType, tripId, entityId, data);
+      return;
+    }
+    try {
+      final uid = _uid!;
+      if (entityType == 'trips') {
+        await _remoteDataSource.createTrip(uid, data);
+      } else if (entityType == 'settings') {
+        await _remoteDataSource.saveSettings(uid, data);
+      } else if (tripId != null) {
+        await _remoteDataSource.createSubEntity(
+            uid, tripId, entityType, data);
+      }
+    } catch (_) {
+      _addPendingChange('create', entityType, tripId, entityId, data);
+    }
+  }
+
+  Future<void> syncUpdate({
+    required String entityType,
+    String? tripId,
+    required String entityId,
+    required Map<String, dynamic> data,
+  }) async {
+    if (!canSync) {
+      _addPendingChange('update', entityType, tripId, entityId, data);
+      return;
+    }
+    try {
+      final uid = _uid!;
+      if (entityType == 'trips') {
+        await _remoteDataSource.updateTrip(uid, entityId, data);
+      } else if (entityType == 'settings') {
+        await _remoteDataSource.saveSettings(uid, data);
+      } else if (tripId != null) {
+        await _remoteDataSource.updateSubEntity(
+            uid, tripId, entityType, entityId, data);
+      }
+    } catch (_) {
+      _addPendingChange('update', entityType, tripId, entityId, data);
+    }
+  }
+
+  Future<void> syncDelete({
+    required String entityType,
+    String? tripId,
+    required String entityId,
+  }) async {
+    if (!canSync) {
+      _addPendingChange('delete', entityType, tripId, entityId, null);
+      return;
+    }
+    try {
+      final uid = _uid!;
+      if (entityType == 'trips') {
+        await _remoteDataSource.deleteTrip(uid, entityId);
+      } else if (tripId != null) {
+        await _remoteDataSource.deleteSubEntity(
+            uid, tripId, entityType, entityId);
+      }
+    } catch (_) {
+      _addPendingChange('delete', entityType, tripId, entityId, null);
+    }
+  }
+
+  void _addPendingChange(String action, String entityType,
+      String? tripId, String entityId, Map<String, dynamic>? data) {
+    final change = PendingChange(
+      entityType: entityType,
+      tripId: tripId,
+      entityId: entityId,
+      action: action,
+      data: data,
+    );
+    LocalStorageService.addPendingChange(change.toMap());
+  }
+
+  Future<void> _processPendingChanges() async {
+    if (!canSync) return;
+    _status = SyncStatus.syncing;
+    final rawChanges = LocalStorageService.getRawPendingChanges();
+    if (rawChanges.isEmpty) {
+      _status = SyncStatus.idle;
+      return;
+    }
+    final changes = rawChanges.map(PendingChange.fromMap).toList();
+    final uid = _uid!;
+    for (final change in changes) {
+      try {
+        if (change.data != null &&
+            (change.action == 'create' || change.action == 'update')) {
+          if (change.entityType == 'trips') {
+            if (change.action == 'create') {
+              await _remoteDataSource.createTrip(uid, change.data!);
+            } else {
+              await _remoteDataSource.updateTrip(
+                  uid, change.entityId, change.data!);
+            }
+          } else if (change.entityType == 'settings') {
+            await _remoteDataSource.saveSettings(uid, change.data!);
+          } else if (change.tripId != null) {
+            if (change.action == 'create') {
+              await _remoteDataSource.createSubEntity(uid, change.tripId!,
+                  change.entityType, change.data!);
+            } else {
+              await _remoteDataSource.updateSubEntity(uid, change.tripId!,
+                  change.entityType, change.entityId, change.data!);
+            }
+          }
+        } else if (change.action == 'delete') {
+          if (change.entityType == 'trips') {
+            await _remoteDataSource.deleteTrip(uid, change.entityId);
+          } else if (change.tripId != null) {
+            await _remoteDataSource.deleteSubEntity(
+                uid, change.tripId!, change.entityType, change.entityId);
+          }
+        }
+        LocalStorageService.removePendingChange(change.entityId);
+      } catch (_) {}
+    }
+    _status = SyncStatus.idle;
+  }
+
+  Future<void> fetchAndMergeAll() async {
+    if (!canSync) return;
+    _status = SyncStatus.syncing;
+    try {
+      final uid = _uid!;
+
+      final localTrips = LocalStorageService.getTrips();
+      final remoteTrips = await _remoteDataSource.getAllTrips(uid);
+      final mergedTrips = _mergeLists<Trip>(
+        localTrips.map((t) => t.toMap()).toList(),
+        remoteTrips,
+        Trip.fromMap,
+      );
+      LocalStorageService.saveTrips(mergedTrips);
+
+      for (final trip in mergedTrips) {
+        final tid = trip.id;
+        await _mergeSubEntities<Expense>(
+          uid,
+          tid,
+          'expenses',
+          LocalStorageService.getExpenses()
+              .where((e) => e.tripId == tid)
+              .map((e) => e.toMap())
+              .toList(),
+          Expense.fromMap,
+          (list) => LocalStorageService.saveExpenses(list),
+        );
+        await _mergeSubEntities<Flight>(
+          uid,
+          tid,
+          'flights',
+          LocalStorageService.getFlights()
+              .where((f) => f.tripId == tid)
+              .map((f) => f.toMap())
+              .toList(),
+          Flight.fromMap,
+          (list) => LocalStorageService.saveFlights(list),
+        );
+        await _mergeSubEntities<Activity>(
+          uid,
+          tid,
+          'activities',
+          LocalStorageService.getActivities()
+              .where((a) => a.tripId == tid)
+              .map((a) => a.toMap())
+              .toList(),
+          Activity.fromMap,
+          (list) => LocalStorageService.saveActivities(list),
+        );
+        await _mergeSubEntities<PackingItem>(
+          uid,
+          tid,
+          'packing',
+          LocalStorageService.getPackingItems()
+              .where((p) => p.tripId == tid)
+              .map((p) => p.toMap())
+              .toList(),
+          PackingItem.fromMap,
+          (list) => LocalStorageService.savePackingItems(list),
+        );
+      }
+    } catch (_) {}
+    _status = SyncStatus.idle;
+  }
+
+  List<T> _mergeLists<T>(
+    List<Map<String, dynamic>> local,
+    List<Map<String, dynamic>> remote,
+    T Function(Map<String, dynamic>) fromMap,
+  ) {
+    final merged = <String, Map<String, dynamic>>{};
+    for (final item in local) {
+      merged[item['id'] as String] = Map.from(item);
+    }
+    for (final item in remote) {
+      final id = item['id'] as String;
+      if (!merged.containsKey(id)) {
+        merged[id] = Map.from(item);
+      } else {
+        final localUpdated = _parseDateTime(merged[id]!['updatedAt']);
+        final remoteUpdated = _parseDateTime(item['updatedAt']);
+        if (remoteUpdated.isAfter(localUpdated)) {
+          merged[id] = Map.from(item);
+        }
+      }
+    }
+    return merged.values.map(fromMap).toList();
+  }
+
+  DateTime _parseDateTime(dynamic value) {
+    if (value == null || value == '') {
+      return DateTime.fromMillisecondsSinceEpoch(0);
+    }
+    if (value is DateTime) return value;
+    if (value is Timestamp) return value.toDate();
+    return DateTime.tryParse(value.toString()) ??
+        DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  Future<void> _mergeSubEntities<T>(
+    String uid,
+    String tripId,
+    String collection,
+    List<Map<String, dynamic>> local,
+    T Function(Map<String, dynamic>) fromMap,
+    void Function(List<T>) saveFn,
+  ) async {
+    final remote =
+        await _remoteDataSource.getAllSubEntities(uid, tripId, collection);
+    if (remote.isEmpty) return;
+    final merged = _mergeLists<T>(local, remote, fromMap);
+    saveFn(merged);
+  }
+
+  void dispose() {
+    _connectivitySub?.cancel();
+  }
+}
