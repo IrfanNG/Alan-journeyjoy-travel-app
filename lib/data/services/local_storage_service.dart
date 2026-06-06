@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../models/activity_model.dart';
 import '../models/app_settings_model.dart';
+import '../models/document_model.dart';
 import '../models/expense_model.dart';
 import '../models/flight_model.dart';
 import '../models/packing_item_model.dart';
@@ -17,6 +18,7 @@ class LocalStorageService {
   static late Box _packingBox;
   static late Box _settingsBox;
   static late Box _pendingBox;
+  static late Box _documentBox;
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -36,6 +38,7 @@ class LocalStorageService {
     _packingBox = await Hive.openBox('packing');
     _settingsBox = await Hive.openBox('settings');
     _pendingBox = await Hive.openBox('pending');
+    _documentBox = await Hive.openBox('documents');
   }
 
   static List<Map<String, dynamic>> _getPendingList() {
@@ -138,6 +141,20 @@ class LocalStorageService {
     _settingsBox.put('settings', jsonEncode(settings.toMap()));
   }
 
+  static List<Document> getDocuments() {
+    final data = _documentBox.get('documents');
+    if (data == null) return [];
+    final list = jsonDecode(data) as List;
+    return list
+        .map((e) => Document.fromMap(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  static void saveDocuments(List<Document> documents) {
+    _documentBox.put(
+        'documents', jsonEncode(documents.map((d) => d.toMap()).toList()));
+  }
+
   static Future<void> clearAll() async {
     await _tripBox.clear();
     await _expenseBox.clear();
@@ -146,6 +163,7 @@ class LocalStorageService {
     await _packingBox.clear();
     await _settingsBox.clear();
     await _pendingBox.clear();
+    await _documentBox.clear();
   }
 }
 

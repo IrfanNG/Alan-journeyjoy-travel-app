@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../../services/auth_service.dart';
 import '../models/activity_model.dart';
+import '../models/document_model.dart';
 import '../models/expense_model.dart';
 import '../models/flight_model.dart';
 import '../models/packing_item_model.dart';
@@ -291,6 +292,17 @@ class SyncService {
               .toList(),
           PackingItem.fromMap,
           (list) => LocalStorageService.savePackingItems(list),
+        );
+        await _mergeSubEntities<Document>(
+          uid,
+          tid,
+          'documents',
+          LocalStorageService.getDocuments()
+              .where((d) => d.tripId == tid)
+              .map((d) => d.toMap())
+              .toList(),
+          Document.fromMap,
+          (list) => LocalStorageService.saveDocuments(list),
         );
       }
     } catch (_) {}

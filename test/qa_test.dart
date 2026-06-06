@@ -9,6 +9,7 @@ import 'package:journey_joy/app/routes.dart';
 import 'package:journey_joy/data/models/currency_model.dart';
 import 'package:journey_joy/data/services/local_storage_service.dart';
 import 'package:journey_joy/providers/activity_provider.dart';
+import 'package:journey_joy/providers/document_provider.dart';
 import 'package:journey_joy/providers/expense_provider.dart';
 import 'package:journey_joy/providers/flight_provider.dart';
 import 'package:journey_joy/providers/packing_provider.dart';
@@ -569,20 +570,44 @@ void main() {
   group('J. Document Hub', () {
     testWidgets('J1. Document screen renders without errors',
         (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: const DocumentScreen(),
-        routes: AppRoutes.routes,
-      ));
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => DocumentProvider()),
+            ChangeNotifierProvider(create: (_) => TripProvider()),
+          ],
+          child: MaterialApp(
+            home: const DocumentScreen(),
+            onGenerateRoute: (settings) {
+              final builder = AppRoutes.routes[settings.name];
+              if (builder == null) return null;
+              return MaterialPageRoute(builder: builder);
+            },
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Documents'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('J2. Tab switching works', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: const DocumentScreen(),
-        routes: AppRoutes.routes,
-      ));
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => DocumentProvider()),
+            ChangeNotifierProvider(create: (_) => TripProvider()),
+          ],
+          child: MaterialApp(
+            home: const DocumentScreen(),
+            onGenerateRoute: (settings) {
+              final builder = AppRoutes.routes[settings.name];
+              if (builder == null) return null;
+              return MaterialPageRoute(builder: builder);
+            },
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Travel Docs'));

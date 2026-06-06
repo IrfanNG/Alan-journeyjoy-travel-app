@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import '../../app/theme.dart';
 import '../../core/widgets/jj_back_button.dart';
 import '../../core/widgets/jj_bottom_nav.dart';
+import '../../data/models/document_model.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/document_provider.dart';
 import '../../providers/trip_provider.dart';
 
 class DocumentScreen extends StatefulWidget {
@@ -16,24 +19,6 @@ class DocumentScreen extends StatefulWidget {
 class _DocumentScreenState extends State<DocumentScreen> {
   int _selectedTab = 0;
 
-  final _documents = [
-    _DocItem('Passport.pdf', '2.4 MB', Icons.description, 'Travel Docs'),
-    _DocItem('E-ticket.pdf', '890 KB', Icons.confirmation_number, 'Travel Docs'),
-    _DocItem('Hotel Booking.pdf', '1.2 MB', Icons.hotel, 'Travel Docs'),
-    _DocItem('Insurance.pdf', '650 KB', Icons.health_and_safety, 'Travel Docs'),
-    _DocItem('Itinerary.pdf', '1.8 MB', Icons.map, 'Travel Docs'),
-    _DocItem('Photo ID.jpg', '340 KB', Icons.portrait, 'Other'),
-    _DocItem('Visa.pdf', '1.1 MB', Icons.card_membership, 'Other'),
-  ];
-
-  List<_DocItem> get _filtered {
-    if (_selectedTab == 0) return _documents;
-    if (_selectedTab == 1) {
-      return _documents.where((d) => d.category == 'Travel Docs').toList();
-    }
-    return _documents.where((d) => d.category == 'Other').toList();
-  }
-
   String _resolveTripId(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is String && args.isNotEmpty) return args;
@@ -41,9 +26,20 @@ class _DocumentScreenState extends State<DocumentScreen> {
     return tp.trips.isNotEmpty ? tp.trips.first.id : '';
   }
 
+  List<Document> _filtered(List<Document> docs) {
+    if (_selectedTab == 0) return docs;
+    if (_selectedTab == 1) {
+      return docs.where((d) => d.category == 'Travel Docs').toList();
+    }
+    return docs.where((d) => d.category == 'Other').toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final docs = _filtered;
+    final tripId = _resolveTripId(context);
+    final docProvider = context.watch<DocumentProvider>();
+    final allDocs = docProvider.getDocumentsForTrip(tripId);
+    final docs = _filtered(allDocs);
 
     return Scaffold(
       backgroundColor: JJColors.lightBg,
@@ -66,7 +62,8 @@ class _DocumentScreenState extends State<DocumentScreen> {
               ),
               child: Column(
                 children: [
-                  Row(children: [const JJBackButton(), const Spacer()]),
+                  Row(
+                      children: [const JJBackButton(), const Spacer()]),
                   const SizedBox(height: 16),
                   const Row(
                     children: [
@@ -74,22 +71,15 @@ class _DocumentScreenState extends State<DocumentScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Documents',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+                            Text('Documents',
+                                style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white)),
                             SizedBox(height: 4),
-                            Text(
-                              'Keep your travel documents organized',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white70,
-                              ),
-                            ),
+                            Text('Keep your travel documents organized',
+                                style: TextStyle(
+                                    fontSize: 13, color: Colors.white70)),
                           ],
                         ),
                       ),
@@ -125,28 +115,19 @@ class _DocumentScreenState extends State<DocumentScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.folder_open,
-                            size: 56,
-                            color: JJColors.primaryPurple.withAlpha(60),
-                          ),
+                          Icon(Icons.folder_open,
+                              size: 56,
+                              color: JJColors.primaryPurple.withAlpha(60)),
                           const SizedBox(height: 12),
-                          const Text(
-                            'No documents yet',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: JJColors.textDark,
-                            ),
-                          ),
+                          const Text('No documents yet',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: JJColors.textDark)),
                           const SizedBox(height: 4),
-                          const Text(
-                            'Upload your travel documents here',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: JJColors.textMuted,
-                            ),
-                          ),
+                          const Text('Upload your travel documents here',
+                              style: TextStyle(
+                                  fontSize: 13, color: JJColors.textMuted)),
                         ],
                       ),
                     )
@@ -159,18 +140,16 @@ class _DocumentScreenState extends State<DocumentScreen> {
                           padding: const EdgeInsets.only(bottom: 10),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
+                                horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
                               color: JJColors.cardBg,
                               borderRadius: BorderRadius.circular(18),
                               boxShadow: [
                                 BoxShadow(
-                                  color: JJColors.primaryPurple.withAlpha(10),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
+                                    color:
+                                        JJColors.primaryPurple.withAlpha(10),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2)),
                               ],
                             ),
                             child: Row(
@@ -182,11 +161,9 @@ class _DocumentScreenState extends State<DocumentScreen> {
                                     color: JJColors.primaryPurple.withAlpha(15),
                                     borderRadius: BorderRadius.circular(14),
                                   ),
-                                  child: Icon(
-                                    doc.icon,
-                                    color: JJColors.primaryPurple,
-                                    size: 22,
-                                  ),
+                                  child: Icon(_iconForDoc(doc.name),
+                                      color: JJColors.primaryPurple,
+                                      size: 22),
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(
@@ -194,31 +171,45 @@ class _DocumentScreenState extends State<DocumentScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        doc.name,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: JJColors.textDark,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                      Text(doc.name,
+                                          style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: JJColors.textDark),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis),
                                       const SizedBox(height: 2),
-                                      Text(
-                                        doc.size,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: JJColors.textMuted,
-                                        ),
-                                      ),
+                                      Text(doc.sizeFormatted,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              color: JJColors.textMuted)),
                                     ],
                                   ),
                                 ),
-                                Icon(
-                                  Icons.download,
-                                  size: 20,
-                                  color: JJColors.textMuted.withAlpha(120),
+                                PopupMenuButton<String>(
+                                  icon: Icon(Icons.more_vert,
+                                      size: 20,
+                                      color: JJColors.textMuted.withAlpha(120)),
+                                  onSelected: (value) {
+                                    if (value == 'delete') {
+                                      _confirmDelete(context, doc);
+                                    }
+                                  },
+                                  itemBuilder: (_) => [
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.delete_outline,
+                                              size: 18, color: Colors.red),
+                                          SizedBox(width: 8),
+                                          Text('Delete',
+                                              style:
+                                                  TextStyle(color: Colors.red)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -233,25 +224,16 @@ class _DocumentScreenState extends State<DocumentScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Document upload coming later')),
-                    );
-                  },
+                  onPressed: () => _handleUpload(context, tripId),
                   icon: const Icon(Icons.upload_file, size: 22),
-                  label: const Text(
-                    'Upload Document',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  label: const Text('Upload Document',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: JJColors.primaryPurple,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                        borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
                 ),
@@ -262,48 +244,85 @@ class _DocumentScreenState extends State<DocumentScreen> {
       ),
       bottomNavigationBar: JJBottomNav(
         currentTab: JJBottomNavTab.trips,
-        onCenterTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Document upload coming later')),
-          );
-        },
+        onCenterTap: () => _handleUpload(context, tripId),
         onTabTap: (tab) {
-          final tripId = _resolveTripId(context);
           switch (tab) {
             case JJBottomNavTab.home:
               Navigator.pushReplacementNamed(context, '/home');
-              break;
             case JJBottomNavTab.trips:
               if (tripId.isNotEmpty) {
-                Navigator.pushReplacementNamed(
-                  context,
-                  '/trip-detail',
-                  arguments: tripId,
-                );
+                Navigator.pushReplacementNamed(context, '/trip-detail',
+                    arguments: tripId);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Create a trip first')),
-                );
+                    const SnackBar(content: Text('Create a trip first')));
               }
-              break;
             case JJBottomNavTab.expenses:
               if (tripId.isNotEmpty) {
-                Navigator.pushReplacementNamed(
-                  context,
-                  '/expenses',
-                  arguments: tripId,
-                );
+                Navigator.pushReplacementNamed(context, '/expenses',
+                    arguments: tripId);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Create a trip first')),
-                );
+                    const SnackBar(content: Text('Create a trip first')));
               }
-              break;
             case JJBottomNavTab.more:
               Navigator.pushReplacementNamed(context, '/settings');
-              break;
           }
         },
+      ),
+    );
+  }
+
+  IconData _iconForDoc(String name) {
+    final lower = name.toLowerCase();
+    if (lower.endsWith('.pdf')) return Icons.picture_as_pdf;
+    if (lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.gif')) {
+      return Icons.image;
+    }
+    if (lower.endsWith('.doc') || lower.endsWith('.docx')) {
+      return Icons.description;
+    }
+    if (lower.endsWith('.xls') || lower.endsWith('.xlsx')) {
+      return Icons.table_chart;
+    }
+    return Icons.insert_drive_file;
+  }
+
+  Future<void> _handleUpload(BuildContext context, String tripId) async {
+    if (tripId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Create a trip first')));
+      return;
+    }
+    String? userId;
+    try {
+      userId = context.read<AuthProvider>().user?.uid;
+    } catch (_) {}
+    final provider = context.read<DocumentProvider>();
+    await provider.pickAndUpload(tripId, userId);
+  }
+
+  void _confirmDelete(BuildContext context, Document doc) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Document'),
+        content: Text('Delete "${doc.name}"?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<DocumentProvider>().deleteDocument(doc.id);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
@@ -331,13 +350,4 @@ class _DocumentScreenState extends State<DocumentScreen> {
       ),
     );
   }
-}
-
-class _DocItem {
-  final String name;
-  final String size;
-  final IconData icon;
-  final String category;
-
-  const _DocItem(this.name, this.size, this.icon, this.category);
 }

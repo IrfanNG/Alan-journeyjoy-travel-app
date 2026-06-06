@@ -9,6 +9,7 @@ import 'data/services/sync_service.dart';
 import 'firebase_options.dart';
 import 'providers/activity_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/document_provider.dart';
 import 'providers/expense_provider.dart';
 import 'providers/flight_provider.dart';
 import 'providers/packing_provider.dart';
@@ -97,6 +98,9 @@ class _JourneyJoyAppState extends State<JourneyJoyApp> {
         ChangeNotifierProvider(
             create: (_) => PackingProvider(syncService: _syncService)
               ..loadItems()),
+        ChangeNotifierProvider(
+            create: (_) => DocumentProvider(syncService: _syncService)
+              ..loadDocuments()),
         ChangeNotifierProvider(
             create: (_) => SettingsProvider(syncService: _syncService)
               ..loadSettings()),
