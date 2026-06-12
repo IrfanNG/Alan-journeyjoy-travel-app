@@ -20,6 +20,27 @@ class ActivityProvider extends ChangeNotifier {
     return _activities.where((a) => a.tripId == tripId).toList();
   }
 
+  List<Activity> getUpcomingActivities(String tripId) {
+    final now = DateTime.now();
+    return getActivitiesForTrip(tripId)
+        .where((a) => a.date.isAfter(now.subtract(const Duration(days: 1))))
+        .toList();
+  }
+
+  List<Activity> getPastActivities(String tripId) {
+    return getActivitiesForTrip(tripId)
+        .where((a) => a.date.isBefore(DateTime.now()))
+        .toList();
+  }
+
+  List<Activity> searchActivities(String tripId, String query) {
+    if (query.isEmpty) return getActivitiesForTrip(tripId);
+    final lower = query.toLowerCase();
+    return getActivitiesForTrip(tripId)
+        .where((a) => a.name.toLowerCase().contains(lower))
+        .toList();
+  }
+
   void addActivity(
     String tripId,
     String name,
@@ -60,6 +81,40 @@ class ActivityProvider extends ChangeNotifier {
       tripId: tripId,
       entityId: id,
     );
+  }
+
+  void updateActivity(
+    String id,
+    String name,
+    String? details,
+    DateTime date,
+    String? timeText,
+    String? referenceLink,
+  ) {
+    final index = _activities.indexWhere((a) => a.id == id);
+    if (index == -1) return;
+    _activities[index].name = name;
+    _activities[index].details = details;
+    _activities[index].date = date;
+    _activities[index].timeText = timeText;
+    _activities[index].referenceLink = referenceLink;
+    _activities[index].updatedAt = DateTime.now();
+    LocalStorageService.saveActivities(_activities);
+    notifyListeners();
+    _syncService?.syncUpdate(
+      entityType: 'activities',
+      tripId: _activities[index].tripId,
+      entityId: id,
+      data: _activities[index].toMap(),
+    );
+  }
+
+  Activity? getActivityById(String id) {
+    try {
+      return _activities.firstWhere((a) => a.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 
   void deleteByTripId(String tripId) {

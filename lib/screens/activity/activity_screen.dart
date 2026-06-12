@@ -18,6 +18,11 @@ class ActivityScreen extends StatefulWidget {
 class _ActivityScreenState extends State<ActivityScreen> {
   final _controller = TextEditingController();
   bool _showAdd = false;
+  String? _editActivityId;
+  DateTime _selectedActivityDate = DateTime.now();
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isSearching = false;
   int _selectedTab = 0;
   final _activityColors = [
     const Color(0xFF5B2BEA),
@@ -43,6 +48,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -54,10 +60,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
         ? args
         : (tp.trips.isNotEmpty ? tp.trips.first.id : '');
     final activityProvider = context.watch<ActivityProvider>();
-    final allActivities = activityProvider.getActivitiesForTrip(tripId);
-    final filtered = _selectedTab == 0
-        ? allActivities
-        : allActivities.where((a) => false).toList();
+    final filtered = _isSearching
+        ? activityProvider.searchActivities(tripId, _searchQuery)
+        : _selectedTab == 0
+            ? activityProvider.getUpcomingActivities(tripId)
+            : activityProvider.getPastActivities(tripId);
 
     return Scaffold(
       backgroundColor: JJColors.lightBg,
@@ -80,22 +87,56 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       ),
                     ),
                   ),
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: JJColors.primaryPurple.withAlpha(18),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: const Icon(
-                      Icons.search,
-                      color: JJColors.primaryPurple,
-                      size: 23,
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _isSearching = !_isSearching;
+                      if (!_isSearching) {
+                        _searchController.clear();
+                        _searchQuery = '';
+                      }
+                    }),
+                    child: Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: JJColors.primaryPurple.withAlpha(18),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Icon(
+                        _isSearching ? Icons.close : Icons.search,
+                        color: JJColors.primaryPurple,
+                        size: 23,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+            if (_isSearching)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                child: TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Search activities...',
+                    hintStyle: TextStyle(
+                      color: JJColors.textMuted.withAlpha(100),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                  onChanged: (v) => setState(() => _searchQuery = v),
+                ),
+              ),
             const SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -226,11 +267,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: Icon(
-                                    Icons.more_horiz,
-                                    color: JJColors.textMuted.withAlpha(120),
-                                    size: 20,
+                                  padding: const EdgeInsets.only(right: 4),
+                                  child: IconButton(
+                                    onPressed: () {
+                                      _editActivityId = activity.id;
+                                      _controller.text = activity.name;
+                                      _selectedActivityDate = activity.date;
+                                      setState(() => _showAdd = true);
+                                    },
+                                    icon: const Icon(
+                                      Icons.edit_outlined,
+                                      color: JJColors.textMuted,
+                                      size: 18,
+                                    ),
                                   ),
                                 ),
                                 IconButton(
@@ -257,7 +306,22 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: () => setState(() => _showAdd = true),
+                  onPressed: () {
+                    final trip = context.read<TripProvider>().getTripById(tripId);
+                    if (trip?.startDate != null) {
+                      final now = DateTime.now();
+                      if (trip!.startDate!.isBefore(now) &&
+                          trip.endDate != null &&
+                          trip.endDate!.isAfter(now.subtract(const Duration(days: 1)))) {
+                        _selectedActivityDate = now;
+                      } else {
+                        _selectedActivityDate = trip.startDate!;
+                      }
+                    } else {
+                      _selectedActivityDate = DateTime.now();
+                    }
+                    setState(() => _showAdd = true);
+                  },
                   icon: const Icon(Icons.add, size: 22),
                   label: const Text(
                     'Add Activity',
@@ -341,9 +405,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Add Activity',
-                        style: TextStyle(
+                      Text(
+                        _editActivityId != null
+                            ? 'Edit Activity'
+                            : 'Add Activity',
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: JJColors.textDark,
@@ -351,7 +417,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          setState(() => _showAdd = false);
+                          setState(() {
+                            _showAdd = false;
+                            _editActivityId = null;
+                          });
                           _controller.clear();
                         },
                         child: const Icon(
@@ -382,6 +451,62 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: () async {
+                      final trip = context.read<TripProvider>().getTripById(tripId);
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedActivityDate,
+                        firstDate: trip?.startDate ?? DateTime(2020),
+                        lastDate: trip?.endDate ?? DateTime(2035),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: Theme.of(context).colorScheme.copyWith(
+                                    primary: JJColors.primaryPurple,
+                                  ),
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      if (picked != null) {
+                        setState(() => _selectedActivityDate = picked);
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: JJColors.primaryPurple.withAlpha(15),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 18,
+                            color: JJColors.primaryPurple.withAlpha(150),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            DateFormat('MMM dd, yyyy').format(_selectedActivityDate),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: JJColors.textDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
@@ -397,15 +522,27 @@ class _ActivityScreenState extends State<ActivityScreen> {
                           );
                           return;
                         }
-                        context.read<ActivityProvider>().addActivity(
-                          tripId,
-                          text,
-                          null,
-                          DateTime.now(),
-                          null,
-                          null,
-                        );
+                        if (_editActivityId != null) {
+                          context.read<ActivityProvider>().updateActivity(
+                            _editActivityId!,
+                            text,
+                            null,
+                            _selectedActivityDate,
+                            null,
+                            null,
+                          );
+                        } else {
+                          context.read<ActivityProvider>().addActivity(
+                            tripId,
+                            text,
+                            null,
+                            _selectedActivityDate,
+                            null,
+                            null,
+                          );
+                        }
                         _controller.clear();
+                        _editActivityId = null;
                         setState(() => _showAdd = false);
                       },
                       style: ElevatedButton.styleFrom(
@@ -416,9 +553,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Add Activity',
-                        style: TextStyle(
+                      child: Text(
+                        _editActivityId != null
+                            ? 'Save Changes'
+                            : 'Add Activity',
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),

@@ -3,7 +3,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../app/theme.dart';
 import '../../core/widgets/jj_bottom_nav.dart';
+import '../../data/models/currency_model.dart';
 import '../../data/models/trip_model.dart';
+import '../../providers/activity_provider.dart';
+import '../../providers/expense_provider.dart';
+import '../../providers/flight_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../providers/trip_provider.dart';
 
 Color _parseTripColor(String hex) {
@@ -29,6 +34,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedTripIndex = 0;
+  bool _isSearching = false;
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   String _greeting() {
     final hour = DateTime.now().hour;
@@ -51,6 +65,11 @@ class _HomeScreenState extends State<HomeScreen> {
           final trips = tripProvider.trips;
           List<Trip> displayTrips = trips.toList();
           displayTrips.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          if (_searchQuery.isNotEmpty) {
+            final lower = _searchQuery.toLowerCase();
+            displayTrips =
+                displayTrips.where((t) => t.name.toLowerCase().contains(lower)).toList();
+          }
           if (_selectedTripIndex >= displayTrips.length) {
             _selectedTripIndex = 0;
           }
@@ -91,45 +110,94 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(25),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.notifications_outlined,
-                            color: Colors.white,
-                            size: 22,
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isSearching = !_isSearching;
+                              if (!_isSearching) {
+                                _searchController.clear();
+                                _searchQuery = '';
+                              }
+                            });
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(25),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              _isSearching
+                                  ? Icons.close
+                                  : Icons.search,
+                              color: Colors.white,
+                              size: 22,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                   Positioned(
-                    top: 116,
+                    top: 96,
                     left: 28,
                     right: 28,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _greeting(),
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        if (!_isSearching) ...[
+                          Text(
+                            _greeting(),
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Where to next?',
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.white.withAlpha(180),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Where to next?',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.white.withAlpha(180),
+                            ),
                           ),
-                        ),
+                          if (!hasTrips) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'Plan smarter. Travel lighter.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white.withAlpha(150),
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ] else
+                          TextField(
+                            controller: _searchController,
+                            autofocus: true,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: 'Search trips...',
+                              hintStyle: TextStyle(
+                                color: Colors.white.withAlpha(150),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.white.withAlpha(20),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                            onChanged: (v) =>
+                                setState(() => _searchQuery = v),
+                          ),
                       ],
                     ),
                   ),
@@ -151,13 +219,18 @@ class _HomeScreenState extends State<HomeScreen> {
                               final trip = hasTrips
                                   ? displayTrips[index]
                                   : null;
-                              return GestureDetector(
+                              return _PressScale(
                                 onTap: () {
                                   if (trip != null) {
                                     Navigator.pushNamed(
                                       context,
                                       '/trip-detail',
                                       arguments: trip.id,
+                                    );
+                                  } else {
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/add-trip',
                                     );
                                   }
                                 },
@@ -253,15 +326,24 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeaderBg(BuildContext context, {double topPadding = 0}) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF32158F), Color(0xFF6A35F4)],
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF32158F), Color(0xFF6A35F4)],
+            ),
+          ),
         ),
-      ),
+        Positioned.fill(
+          child: CustomPaint(
+            painter: _HeaderDecorPainter(),
+          ),
+        ),
+      ],
     );
   }
 
@@ -276,13 +358,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFeaturedCard(BuildContext context, Trip? trip, bool hasTrips) {
-    final gradientColors = hasTrips && trip != null
-        ? _featuredCardGradient(trip.colorHex)
-        : const [
-            Color(0xFF7A5AF5),
-            Color(0xFF5B2BEA),
-            Color(0xFF32158F),
-          ];
+    if (hasTrips && trip != null) {
+      return _buildTripCard(trip);
+    }
+    return _buildEmptyTripCard();
+  }
+
+  Widget _buildTripCard(Trip trip) {
+    final gradientColors = _featuredCardGradient(trip.colorHex);
+
+    String dateText;
+    if (trip.startDate != null && trip.endDate != null) {
+      final days = trip.endDate!.difference(trip.startDate!).inDays + 1;
+      dateText =
+          '${DateFormat('MMM dd').format(trip.startDate!)} - ${DateFormat('MMM dd').format(trip.endDate!)} • $days days';
+    } else {
+      dateText = DateFormat('MMM dd, yyyy').format(trip.createdAt);
+    }
+
+    final expenseProvider = context.read<ExpenseProvider>();
+    final flightProvider = context.read<FlightProvider>();
+    final activityProvider = context.read<ActivityProvider>();
+    final settingsProvider = context.read<SettingsProvider>();
+    final currency = currencyFromCode(settingsProvider.currencyCode);
 
     return SizedBox(
       height: 160,
@@ -335,21 +433,115 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.white.withAlpha(20),
                   ),
                 ),
-                Positioned(
-                  top: 14,
-                  right: 14,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(25),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.favorite_border,
-                      color: Colors.white.withAlpha(180),
-                      size: 16,
-                    ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(28),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.flight_takeoff,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  trip.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  dateText,
+                                  style: TextStyle(
+                                    color: Colors.white.withAlpha(180),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          _statChip(
+                            Icons.account_balance_wallet_outlined,
+                            currency.format(expenseProvider.getTotalForTrip(trip.id)),
+                          ),
+                          const SizedBox(width: 12),
+                          _statChip(
+                            Icons.flight_outlined,
+                            '${flightProvider.getFlightsForTrip(trip.id).length} flight${flightProvider.getFlightsForTrip(trip.id).length == 1 ? '' : 's'}',
+                          ),
+                          const SizedBox(width: 12),
+                          _statChip(
+                            Icons.emoji_events_outlined,
+                            '${activityProvider.getActivitiesForTrip(trip.id).length} activit${activityProvider.getActivitiesForTrip(trip.id).length == 1 ? 'y' : 'ies'}',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyTripCard() {
+    return SizedBox(
+      height: 160,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x405B2BEA),
+              blurRadius: 16,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF7A5AF5),
+                  Color(0xFF5B2BEA),
+                  Color(0xFF32158F),
+                ],
+              ),
+            ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _EmptyCardDecorPainter(),
                   ),
                 ),
                 Padding(
@@ -366,10 +558,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               color: Colors.white.withAlpha(28),
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: Icon(
-                              hasTrips
-                                  ? Icons.flight_takeoff
-                                  : Icons.add_location_alt,
+                            child: const Icon(
+                              Icons.add_location_alt,
                               color: Colors.white,
                               size: 20,
                             ),
@@ -379,11 +569,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  hasTrips
-                                      ? trip!.name
-                                      : 'Plan Your First Trip',
-                                  style: const TextStyle(
+                                const Text(
+                                  'Plan Your First Trip',
+                                  style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -391,14 +579,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  hasTrips
-                                      ? DateFormat(
-                                          'MMM dd, yyyy',
-                                        ).format(trip!.createdAt)
-                                      : 'Create your adventure',
+                                  'Build itinerary, budget, flights & packing in one place',
                                   style: TextStyle(
                                     color: Colors.white.withAlpha(180),
-                                    fontSize: 12,
+                                    fontSize: 11,
                                   ),
                                 ),
                               ],
@@ -407,34 +591,40 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       const Spacer(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            hasTrips ? '71% Planned' : '0% Planned',
-                            style: TextStyle(
-                              color: Colors.white.withAlpha(200),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x26000000),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
                             ),
-                          ),
-                          Icon(
-                            Icons.more_horiz,
-                            color: Colors.white.withAlpha(150),
-                            size: 18,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: hasTrips ? 0.71 : 0,
-                          backgroundColor: Colors.white.withAlpha(30),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFF58C783),
-                          ),
-                          minHeight: 5,
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.add,
+                              color: Color(0xFF5B2BEA),
+                              size: 16,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Start planning',
+                              style: TextStyle(
+                                color: Color(0xFF5B2BEA),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -443,6 +633,36 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _statChip(IconData icon, String label) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(25),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white.withAlpha(210), size: 13),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -541,7 +761,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String label,
     VoidCallback? onTap,
   ) {
-    return GestureDetector(
+    return _PressScale(
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -597,6 +817,167 @@ class _HomeScreenState extends State<HomeScreen> {
     }[module]!;
     Navigator.pushNamed(context, route, arguments: selectedTrip.id);
   }
+}
+
+class _PressScale extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  const _PressScale({required this.child, this.onTap});
+
+  @override
+  State<_PressScale> createState() => _PressScaleState();
+}
+
+class _PressScaleState extends State<_PressScale> {
+  double _scale = 1.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _scale = 0.94),
+      onTapUp: (_) => setState(() => _scale = 1.0),
+      onTapCancel: () => setState(() => _scale = 1.0),
+      child: AnimatedScale(
+        scale: _scale,
+        duration: const Duration(milliseconds: 120),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _HeaderDecorPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final routePaint = Paint()
+      ..color = Colors.white.withAlpha(18)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    final routePath = Path()
+      ..moveTo(0, size.height * 0.6)
+      ..quadraticBezierTo(
+        size.width * 0.3, size.height * 0.3,
+        size.width * 0.5, size.height * 0.55,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.7, size.height * 0.8,
+        size.width, size.height * 0.4,
+      );
+    canvas.drawPath(routePath, routePaint);
+
+    final dotPaint = Paint()..color = Colors.white.withAlpha(25);
+    canvas.drawCircle(Offset(0, size.height * 0.6), 4, dotPaint);
+    canvas.drawCircle(Offset(size.width * 0.3, size.height * 0.3), 3, dotPaint);
+    canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.55), 3, dotPaint);
+    canvas.drawCircle(Offset(size.width * 0.7, size.height * 0.8), 2.5, dotPaint);
+    canvas.drawCircle(Offset(size.width, size.height * 0.4), 3.5, dotPaint);
+
+    canvas.save();
+    canvas.translate(size.width * 0.5, size.height * 0.55);
+    canvas.rotate(0.5);
+    final planePaint = Paint()..color = Colors.white.withAlpha(25);
+    final planePath = Path()
+      ..moveTo(0, -6)
+      ..lineTo(2.5, -1.5)
+      ..lineTo(5, -1.5)
+      ..lineTo(3.5, 0)
+      ..lineTo(1.5, 0)
+      ..lineTo(1, 3)
+      ..lineTo(-1, 3)
+      ..lineTo(-1.5, 0)
+      ..lineTo(-3.5, 0)
+      ..lineTo(-5, -1.5)
+      ..lineTo(-2.5, -1.5)
+      ..close();
+    canvas.drawPath(planePath, planePaint);
+    canvas.restore();
+
+    final glowPaint = Paint()
+      ..shader = RadialGradient(
+        center: Alignment.topRight,
+        radius: 0.8,
+        colors: [
+          Colors.white.withAlpha(8),
+          Colors.white.withAlpha(4),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), glowPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _EmptyCardDecorPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final whitePaint = Paint()..color = Colors.white.withAlpha(15);
+    final dashPaint = Paint()
+      ..color = Colors.white.withAlpha(30)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final mapPath = Path()
+      ..moveTo(size.width * 0.6, size.height * 0.1)
+      ..quadraticBezierTo(size.width * 0.75, size.height * 0.05, size.width * 0.85, size.height * 0.2)
+      ..quadraticBezierTo(size.width * 0.95, size.height * 0.35, size.width * 0.85, size.height * 0.5)
+      ..quadraticBezierTo(size.width * 0.75, size.height * 0.6, size.width * 0.65, size.height * 0.55)
+      ..quadraticBezierTo(size.width * 0.5, size.height * 0.65, size.width * 0.35, size.height * 0.55)
+      ..quadraticBezierTo(size.width * 0.2, size.height * 0.5, size.width * 0.25, size.height * 0.35)
+      ..quadraticBezierTo(size.width * 0.3, size.height * 0.2, size.width * 0.45, size.height * 0.15)
+      ..close();
+    canvas.drawPath(mapPath, whitePaint);
+
+    final routePath = Path()
+      ..moveTo(size.width * 0.15, size.height * 0.75)
+      ..quadraticBezierTo(size.width * 0.3, size.height * 0.4, size.width * 0.5, size.height * 0.5)
+      ..quadraticBezierTo(size.width * 0.65, size.height * 0.55, size.width * 0.75, size.height * 0.3);
+    canvas.drawPath(routePath, dashPaint);
+
+    final pinPaint = Paint()..color = Colors.white.withAlpha(40);
+    canvas.drawCircle(Offset(size.width * 0.75, size.height * 0.3), 4, pinPaint);
+    final pinStem = Path()
+      ..moveTo(size.width * 0.75 - 2, size.height * 0.3 + 2)
+      ..lineTo(size.width * 0.75, size.height * 0.3 + 7)
+      ..lineTo(size.width * 0.75 + 2, size.height * 0.3 + 2);
+    canvas.drawPath(pinStem, pinPaint);
+
+    canvas.save();
+    canvas.translate(size.width * 0.4, size.height * 0.48);
+    canvas.rotate(-0.3);
+    final planePaint = Paint()..color = Colors.white.withAlpha(35);
+    final planePath = Path()
+      ..moveTo(0, -7)
+      ..lineTo(3, -2)
+      ..lineTo(6, -2)
+      ..lineTo(4, 0)
+      ..lineTo(2, 0)
+      ..lineTo(1, 4)
+      ..lineTo(-1, 4)
+      ..lineTo(-2, 0)
+      ..lineTo(-4, 0)
+      ..lineTo(-6, -2)
+      ..lineTo(-3, -2)
+      ..close();
+    canvas.drawPath(planePath, planePaint);
+    canvas.restore();
+
+    final ticketPaint = Paint()..color = Colors.white.withAlpha(12);
+    final ticketRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(size.width * 0.55, size.height * 0.6, 30, 20),
+      const Radius.circular(3),
+    );
+    canvas.drawRRect(ticketRect, ticketPaint);
+
+    final cutoutPaint = Paint()..color = Colors.white.withAlpha(8);
+    canvas.drawCircle(Offset(size.width * 0.55, size.height * 0.7), 3, cutoutPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _CardDecorPainter extends CustomPainter {

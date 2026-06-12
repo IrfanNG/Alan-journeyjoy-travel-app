@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RemoteDataSource {
   final FirebaseFirestore _firestore;
@@ -19,12 +20,35 @@ class RemoteDataSource {
   CollectionReference<Map<String, dynamic>> _settings(String uid) =>
       _userDoc(uid).collection('settings');
 
+  Future<void> _ensureUserDocument(String uid) async {
+    final ref = _userDoc(uid);
+    final snapshot = await ref.get();
+    final now = FieldValue.serverTimestamp();
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (snapshot.exists) {
+      await ref.set({'updatedAt': now}, SetOptions(merge: true));
+      return;
+    }
+
+    await ref.set({
+      'name': user?.displayName ??
+          user?.email?.split('@').first ??
+          'User',
+      if (user?.email != null) 'email': user!.email,
+      'createdAt': now,
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+  }
+
   Future<void> createTrip(String uid, Map<String, dynamic> data) async {
+    await _ensureUserDocument(uid);
     await _trips(uid).doc(data['id'] as String).set(data);
   }
 
   Future<void> updateTrip(
       String uid, String tripId, Map<String, dynamic> data) async {
+    await _ensureUserDocument(uid);
     await _trips(uid).doc(tripId).update(data);
   }
 
@@ -44,11 +68,13 @@ class RemoteDataSource {
 
   Future<void> createSubEntity(String uid, String tripId,
       String collection, Map<String, dynamic> data) async {
+    await _ensureUserDocument(uid);
     await _subCol(uid, tripId, collection).doc(data['id'] as String).set(data);
   }
 
   Future<void> updateSubEntity(String uid, String tripId,
       String collection, String id, Map<String, dynamic> data) async {
+    await _ensureUserDocument(uid);
     await _subCol(uid, tripId, collection).doc(id).update(data);
   }
 
@@ -64,6 +90,7 @@ class RemoteDataSource {
   }
 
   Future<void> saveSettings(String uid, Map<String, dynamic> data) async {
+    await _ensureUserDocument(uid);
     await _settings(uid).doc('app').set(data);
   }
 

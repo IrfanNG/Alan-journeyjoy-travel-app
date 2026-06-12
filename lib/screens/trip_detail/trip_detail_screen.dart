@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../app/theme.dart';
 import '../../core/widgets/jj_back_button.dart';
 import '../../core/widgets/jj_bottom_nav.dart';
+import '../../data/models/trip_model.dart';
 import '../../providers/activity_provider.dart';
 import '../../providers/flight_provider.dart';
 import '../../providers/packing_provider.dart';
@@ -101,17 +102,20 @@ class TripDetailScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const JJBackButton(),
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(30),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.edit_outlined,
-                            color: Colors.white,
-                            size: 20,
+                        GestureDetector(
+                          onTap: () => _editTrip(context, trip),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(30),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.edit_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
                         ),
                       ],
@@ -175,9 +179,23 @@ class TripDetailScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: Column(
-                          children: [
-                            _buildListRow(
+                          child: Column(
+                            children: [
+                              _buildListRow(
+                                context,
+                                icon: Icons.route_outlined,
+                                label: 'Itinerary',
+                                trailing: trip.startDate != null && trip.endDate != null
+                                    ? '${trip.endDate!.difference(trip.startDate!).inDays + 1} days'
+                                    : null,
+                                onTap: () => Navigator.pushNamed(
+                                  context,
+                                  '/itinerary',
+                                  arguments: trip.id,
+                                ),
+                              ),
+                              const Divider(height: 1, indent: 60),
+                              _buildListRow(
                               context,
                               icon: Icons.flight_outlined,
                               label: 'Flights',
@@ -250,7 +268,7 @@ class TripDetailScreen extends StatelessWidget {
             case JJBottomNavTab.trips:
               break;
             case JJBottomNavTab.expenses:
-              Navigator.pushReplacementNamed(
+              Navigator.pushNamed(
                 context,
                 '/expenses',
                 arguments: trip.id,
@@ -275,9 +293,7 @@ class TripDetailScreen extends StatelessWidget {
           label: 'Plan',
           isActive: true,
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Plan feature coming soon')),
-            );
+            Navigator.pushNamed(context, '/report', arguments: tripId);
           },
         ),
         _actionChip(
@@ -286,9 +302,9 @@ class TripDetailScreen extends StatelessWidget {
           label: 'Itinerary',
           isActive: false,
           onTap: () =>
-              Navigator.pushReplacementNamed(
+              Navigator.pushNamed(
                 context,
-                '/activities',
+                '/itinerary',
                 arguments: tripId,
               ),
         ),
@@ -298,7 +314,7 @@ class TripDetailScreen extends StatelessWidget {
           label: 'Expenses',
           isActive: false,
           onTap: () =>
-              Navigator.pushReplacementNamed(
+              Navigator.pushNamed(
                 context,
                 '/expenses',
                 arguments: tripId,
@@ -309,11 +325,12 @@ class TripDetailScreen extends StatelessWidget {
           icon: Icons.note_alt_outlined,
           label: 'Notes',
           isActive: false,
-          onTap: () {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Notes coming later')));
-          },
+          onTap: () =>
+              Navigator.pushNamed(
+                context,
+                '/itinerary',
+                arguments: tripId,
+              ),
         ),
       ],
     );
@@ -424,6 +441,183 @@ class TripDetailScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+const List<String> _tripColors = [
+  '#6C63FF', '#FF6B6B', '#4ECDC4', '#FFD93D',
+  '#6BCB77', '#FF8C42', '#A66CFF', '#FF6B9D',
+];
+
+void _editTrip(BuildContext context, Trip trip) {
+  final nameController = TextEditingController(text: trip.name);
+  String selectedColor = trip.colorHex;
+  DateTime? startDate = trip.startDate;
+  DateTime? endDate = trip.endDate;
+
+  showDialog(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setDialogState) => AlertDialog(
+        title: const Text('Edit Trip'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Trip name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Color', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _tripColors.map((hex) {
+                  final cleaned = hex.trim().replaceFirst('#', '');
+                  final c = int.tryParse('0xFF$cleaned');
+                  final color = c != null ? Color(c) : JJColors.primaryPurple;
+                  final selected = selectedColor == hex;
+                  return GestureDetector(
+                    onTap: () => setDialogState(() => selectedColor = hex),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: selected
+                            ? Border.all(color: Colors.black87, width: 3)
+                            : null,
+                      ),
+                      child: selected
+                          ? const Icon(Icons.check, color: Colors.white, size: 18)
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              const Text('Trip Dates', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _datePickButton(
+                      context,
+                      label: 'Start',
+                      date: startDate,
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: ctx,
+                          initialDate: startDate ?? DateTime.now(),
+                          firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                          lastDate: endDate ?? DateTime.now().add(const Duration(days: 730)),
+                        );
+                        if (picked != null) {
+                          setDialogState(() {
+                            startDate = picked;
+                            if (endDate != null && endDate!.isBefore(picked)) {
+                              endDate = null;
+                            }
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _datePickButton(
+                      context,
+                      label: 'End',
+                      date: endDate,
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: ctx,
+                          initialDate: endDate ?? startDate ?? DateTime.now(),
+                          firstDate: startDate ?? DateTime.now().subtract(const Duration(days: 365)),
+                          lastDate: DateTime.now().add(const Duration(days: 730)),
+                        );
+                        if (picked != null) {
+                          setDialogState(() => endDate = picked);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              if (name.isEmpty) return;
+              context.read<TripProvider>().updateTrip(
+                    trip.id,
+                    name,
+                    selectedColor,
+                    startDate: startDate,
+                    endDate: endDate,
+                  );
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _datePickButton(
+  BuildContext context, {
+  required String label,
+  required DateTime? date,
+  required VoidCallback onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        border: Border.all(color: JJColors.primaryPurple.withAlpha(40)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.calendar_today,
+            size: 14,
+            color: date != null
+                ? JJColors.primaryPurple
+                : JJColors.textMuted.withAlpha(120),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            date != null ? DateFormat('MMM dd, yyyy').format(date) : label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: date != null
+                  ? JJColors.textDark
+                  : JJColors.textMuted.withAlpha(150),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _HeroDecorPainter extends CustomPainter {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
@@ -15,6 +16,8 @@ class AddTripScreen extends StatefulWidget {
 class _AddTripScreenState extends State<AddTripScreen> {
   final _nameController = TextEditingController();
   String _selectedColor = '#5B2BEA';
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   final List<String> _colorOptions = [
     '#5B2BEA',
@@ -41,7 +44,9 @@ class _AddTripScreenState extends State<AddTripScreen> {
       ).showSnackBar(const SnackBar(content: Text('Please enter a trip name')));
       return;
     }
-    context.read<TripProvider>().addTrip(name, _selectedColor);
+    context
+        .read<TripProvider>()
+        .addTrip(name, _selectedColor, startDate: _startDate, endDate: _endDate);
     Navigator.pop(context);
   }
 
@@ -136,6 +141,35 @@ class _AddTripScreenState extends State<AddTripScreen> {
                   ),
                   const SizedBox(height: 14),
                   _buildColorPicker(),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Trip Dates',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: JJColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _dateButton(
+                          label: 'Start',
+                          date: _startDate,
+                          onTap: () => _pickDate(context, isStart: true),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _dateButton(
+                          label: 'End',
+                          date: _endDate,
+                          onTap: () => _pickDate(context, isStart: false),
+                        ),
+                      ),
+                    ],
+                  ),
                   const Spacer(),
                   SizedBox(
                     width: double.infinity,
@@ -238,6 +272,71 @@ class _AddTripScreenState extends State<AddTripScreen> {
         }).toList(),
       ),
     );
+  }
+
+  Widget _dateButton({
+    required String label,
+    required DateTime? date,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: JJColors.primaryPurple.withAlpha(20)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.calendar_today,
+              size: 14,
+              color: date != null
+                  ? JJColors.primaryPurple
+                  : JJColors.textMuted.withAlpha(120),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              date != null ? DateFormat('MMM dd').format(date) : label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: date != null
+                    ? JJColors.textDark
+                    : JJColors.textMuted.withAlpha(150),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickDate(BuildContext context, {required bool isStart}) async {
+    final initial = isStart ? _startDate : _endDate;
+    final first = isStart ? null : _startDate;
+    final last = isStart ? _endDate : null;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial ?? DateTime.now(),
+      firstDate: first ?? DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: last ?? DateTime.now().add(const Duration(days: 730)),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isStart) {
+          _startDate = picked;
+          if (_endDate != null && _endDate!.isBefore(picked)) {
+            _endDate = null;
+          }
+        } else {
+          _endDate = picked;
+        }
+      });
+    }
   }
 }
 

@@ -7,6 +7,7 @@ import '../../core/widgets/jj_back_button.dart';
 import '../../data/models/currency_model.dart';
 import '../../providers/expense_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/trip_provider.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -21,6 +22,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   String _selectedCategory = 'Food';
   DateTime _selectedDate = DateTime.now();
   final _noteController = TextEditingController();
+  String? _editExpenseId;
+  bool _initialized = false;
 
   @override
   void dispose() {
@@ -28,6 +31,40 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     _amountController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+
+  void _initialize() {
+    if (_initialized) return;
+    _initialized = true;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    String? tripId;
+    if (args is String) {
+      tripId = args;
+    } else if (args is Map<String, dynamic>) {
+      _editExpenseId = args['expenseId'] as String?;
+      final expense = _editExpenseId != null
+          ? context.read<ExpenseProvider>().getExpenseById(_editExpenseId!)
+          : null;
+      if (expense != null) {
+        _itemNameController.text = expense.itemName;
+        _amountController.text = expense.amount.toString();
+        _selectedCategory = expense.category;
+        _selectedDate = expense.createdAt;
+        return;
+      }
+      tripId = args['tripId'] as String?;
+    }
+    if (tripId != null && tripId.isNotEmpty) {
+      final trip = context.read<TripProvider>().getTripById(tripId);
+      if (trip?.startDate != null && trip?.endDate != null) {
+        final now = DateTime.now();
+        if (now.isAfter(trip!.startDate!) && now.isBefore(trip.endDate!.add(const Duration(days: 1)))) {
+          _selectedDate = now;
+        } else {
+          _selectedDate = trip.startDate!;
+        }
+      }
+    }
   }
 
   Future<void> _pickDate() async {
@@ -75,19 +112,24 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       );
       return;
     }
-    context.read<ExpenseProvider>().addExpense(
-      tripId,
-      itemName,
-      amount,
-      _selectedCategory,
-    );
+    final provider = context.read<ExpenseProvider>();
+    if (_editExpenseId != null) {
+      provider.updateExpense(_editExpenseId!, itemName, amount, _selectedCategory,
+          createdAt: _selectedDate);
+    } else {
+      provider.addExpense(tripId, itemName, amount, _selectedCategory,
+          createdAt: _selectedDate);
+    }
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final tripId = ModalRoute.of(context)!.settings.arguments as String;
+    _initialize();
+    final args = ModalRoute.of(context)!.settings.arguments;
+    final tripId = args is String ? args : (args as Map<String, dynamic>)['tripId'] as String;
     final currency = currencyFromCode(context.watch<SettingsProvider>().currencyCode);
+    final isEditing = _editExpenseId != null;
     return Scaffold(
       backgroundColor: JJColors.lightBg,
       body: SafeArea(
@@ -99,10 +141,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 children: [
                   const JJBackButton(variant: JJBackButtonVariant.purpleOnLight),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Add Expense',
-                      style: TextStyle(
+                      isEditing ? 'Edit Expense' : 'Add Expense',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: JJColors.textDark,
@@ -141,12 +183,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
                       children: [
                         _categoryTile('Food', Icons.restaurant),
                         _categoryTile('Transport', Icons.directions_car),
                         _categoryTile('Shopping', Icons.shopping_bag),
+                        _categoryTile('Accommodation', Icons.hotel),
                         _categoryTile('Other', Icons.category),
                       ],
                     ),

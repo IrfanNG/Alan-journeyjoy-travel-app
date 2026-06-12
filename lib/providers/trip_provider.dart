@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../data/models/trip_model.dart';
 import '../data/services/local_storage_service.dart';
 import '../data/services/sync_service.dart';
+import '../services/notification_service.dart';
 
 class TripProvider extends ChangeNotifier {
   final SyncService? _syncService;
@@ -18,11 +19,14 @@ class TripProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Trip addTrip(String name, String colorHex) {
+  Trip addTrip(String name, String colorHex,
+      {DateTime? startDate, DateTime? endDate}) {
     final trip = Trip(
       id: const Uuid().v4(),
       name: name,
       colorHex: colorHex,
+      startDate: startDate,
+      endDate: endDate,
     );
     _trips.add(trip);
     LocalStorageService.saveTrips(_trips);
@@ -32,10 +36,16 @@ class TripProvider extends ChangeNotifier {
       entityId: trip.id,
       data: trip.toMap(),
     );
+    if (trip.startDate != null &&
+        LocalStorageService.getSettings().notificationsEnabled) {
+      NotificationService.scheduleTripReminder(
+          trip.id, trip.name, trip.startDate!);
+    }
     return trip;
   }
 
   void deleteTrip(String id) {
+    NotificationService.cancelTripReminder(id);
     _trips.removeWhere((t) => t.id == id);
     LocalStorageService.saveTrips(_trips);
     notifyListeners();
@@ -43,6 +53,31 @@ class TripProvider extends ChangeNotifier {
       entityType: 'trips',
       entityId: id,
     );
+  }
+
+  void updateTrip(String id, String name, String colorHex,
+      {DateTime? startDate, DateTime? endDate}) {
+    final index = _trips.indexWhere((t) => t.id == id);
+    if (index == -1) return;
+    _trips[index].name = name;
+    _trips[index].colorHex = colorHex;
+    _trips[index].startDate = startDate;
+    _trips[index].endDate = endDate;
+    _trips[index].updatedAt = DateTime.now();
+    LocalStorageService.saveTrips(_trips);
+    notifyListeners();
+    _syncService?.syncUpdate(
+      entityType: 'trips',
+      entityId: id,
+      data: _trips[index].toMap(),
+    );
+    if (startDate != null &&
+        LocalStorageService.getSettings().notificationsEnabled) {
+      NotificationService.scheduleTripReminder(
+          id, _trips[index].name, startDate);
+    } else if (startDate == null) {
+      NotificationService.cancelTripReminder(id);
+    }
   }
 
   Trip? getTripById(String id) {

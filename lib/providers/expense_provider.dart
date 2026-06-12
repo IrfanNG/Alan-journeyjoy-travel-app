@@ -33,14 +33,33 @@ class ExpenseProvider extends ChangeNotifier {
     return totals;
   }
 
+  List<Expense> getExpensesByDateRange(
+      String tripId, DateTime start, DateTime end) {
+    return getExpensesForTrip(tripId).where((e) {
+      final d = e.createdAt;
+      return d.isAfter(start.subtract(const Duration(days: 1))) &&
+          d.isBefore(end.add(const Duration(days: 1)));
+    }).toList();
+  }
+
+  List<Expense> searchExpenses(String tripId, String query) {
+    if (query.isEmpty) return getExpensesForTrip(tripId);
+    final lower = query.toLowerCase();
+    return getExpensesForTrip(tripId)
+        .where((e) => e.itemName.toLowerCase().contains(lower))
+        .toList();
+  }
+
   void addExpense(
-      String tripId, String itemName, double amount, String category) {
+      String tripId, String itemName, double amount, String category,
+      {DateTime? createdAt}) {
     final expense = Expense(
       id: const Uuid().v4(),
       tripId: tripId,
       itemName: itemName,
       amount: amount,
       category: category,
+      createdAt: createdAt,
     );
     _expenses.add(expense);
     LocalStorageService.saveExpenses(_expenses);
@@ -65,6 +84,34 @@ class ExpenseProvider extends ChangeNotifier {
       tripId: tripId,
       entityId: id,
     );
+  }
+
+  void updateExpense(
+      String id, String itemName, double amount, String category,
+      {DateTime? createdAt}) {
+    final index = _expenses.indexWhere((e) => e.id == id);
+    if (index == -1) return;
+    _expenses[index].itemName = itemName;
+    _expenses[index].amount = amount;
+    _expenses[index].category = category;
+    if (createdAt != null) _expenses[index].createdAt = createdAt;
+    _expenses[index].updatedAt = DateTime.now();
+    LocalStorageService.saveExpenses(_expenses);
+    notifyListeners();
+    _syncService?.syncUpdate(
+      entityType: 'expenses',
+      tripId: _expenses[index].tripId,
+      entityId: id,
+      data: _expenses[index].toMap(),
+    );
+  }
+
+  Expense? getExpenseById(String id) {
+    try {
+      return _expenses.firstWhere((e) => e.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 
   void deleteByTripId(String tripId) {

@@ -7,6 +7,7 @@ import '../models/app_settings_model.dart';
 import '../models/document_model.dart';
 import '../models/expense_model.dart';
 import '../models/flight_model.dart';
+import '../models/itinerary_day_model.dart';
 import '../models/packing_item_model.dart';
 import '../models/trip_model.dart';
 
@@ -19,6 +20,7 @@ class LocalStorageService {
   static late Box _settingsBox;
   static late Box _pendingBox;
   static late Box _documentBox;
+  static late Box _itineraryBox;
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -39,6 +41,7 @@ class LocalStorageService {
     _settingsBox = await Hive.openBox('settings');
     _pendingBox = await Hive.openBox('pending');
     _documentBox = await Hive.openBox('documents');
+    _itineraryBox = await Hive.openBox('itinerary');
   }
 
   static List<Map<String, dynamic>> _getPendingList() {
@@ -141,6 +144,14 @@ class LocalStorageService {
     _settingsBox.put('settings', jsonEncode(settings.toMap()));
   }
 
+  static String? getActiveUserId() {
+    return _settingsBox.get('activeUserId') as String?;
+  }
+
+  static Future<void> saveActiveUserId(String uid) async {
+    await _settingsBox.put('activeUserId', uid);
+  }
+
   static List<Document> getDocuments() {
     final data = _documentBox.get('documents');
     if (data == null) return [];
@@ -155,6 +166,31 @@ class LocalStorageService {
         'documents', jsonEncode(documents.map((d) => d.toMap()).toList()));
   }
 
+  static List<ItineraryDay> getItineraryDays() {
+    final data = _itineraryBox.get('itinerary');
+    if (data == null) return [];
+    final list = jsonDecode(data) as List;
+    return list
+        .map((e) => ItineraryDay.fromMap(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  static void saveItineraryDays(List<ItineraryDay> days) {
+    _itineraryBox.put(
+        'itinerary', jsonEncode(days.map((d) => d.toMap()).toList()));
+  }
+
+  static Future<void> clearUserTravelData() async {
+    await _tripBox.clear();
+    await _expenseBox.clear();
+    await _flightBox.clear();
+    await _activityBox.clear();
+    await _packingBox.clear();
+    await _pendingBox.clear();
+    await _documentBox.clear();
+    await _itineraryBox.clear();
+  }
+
   static Future<void> clearAll() async {
     await _tripBox.clear();
     await _expenseBox.clear();
@@ -164,6 +200,6 @@ class LocalStorageService {
     await _settingsBox.clear();
     await _pendingBox.clear();
     await _documentBox.clear();
+    await _itineraryBox.clear();
   }
 }
-

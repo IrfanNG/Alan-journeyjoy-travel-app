@@ -17,6 +17,7 @@ class PackingScreen extends StatefulWidget {
 class _PackingScreenState extends State<PackingScreen> {
   final _controller = TextEditingController();
   bool _showAdd = false;
+  String? _editItemId;
 
   @override
   void dispose() {
@@ -242,6 +243,18 @@ class _PackingScreenState extends State<PackingScreen> {
                                 ),
                               ),
                               IconButton(
+                                onPressed: () {
+                                  _editItemId = item.id;
+                                  _controller.text = item.name;
+                                  setState(() => _showAdd = true);
+                                },
+                                icon: const Icon(
+                                  Icons.edit_outlined,
+                                  color: JJColors.textMuted,
+                                  size: 18,
+                                ),
+                              ),
+                              IconButton(
                                 onPressed: () => _confirmDeleteItem(context, item.id),
                                 icon: const Icon(
                                   Icons.delete_outline,
@@ -348,9 +361,9 @@ class _PackingScreenState extends State<PackingScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Add Item',
-                        style: TextStyle(
+                      Text(
+                        _editItemId != null ? 'Edit Item' : 'Add Item',
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: JJColors.textDark,
@@ -358,7 +371,10 @@ class _PackingScreenState extends State<PackingScreen> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          setState(() => _showAdd = false);
+                          setState(() {
+                            _showAdd = false;
+                            _editItemId = null;
+                          });
                           _controller.clear();
                         },
                         child: const Icon(
@@ -404,10 +420,17 @@ class _PackingScreenState extends State<PackingScreen> {
                           );
                           return;
                         }
-                        context
-                            .read<PackingProvider>()
-                            .addItem(tripId, text);
+                        if (_editItemId != null) {
+                          context
+                              .read<PackingProvider>()
+                              .updateItem(_editItemId!, text);
+                        } else {
+                          context
+                              .read<PackingProvider>()
+                              .addItem(tripId, text);
+                        }
                         _controller.clear();
+                        _editItemId = null;
                         setState(() => _showAdd = false);
                       },
                       style: ElevatedButton.styleFrom(
@@ -418,9 +441,9 @@ class _PackingScreenState extends State<PackingScreen> {
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Add Item',
-                        style: TextStyle(
+                      child: Text(
+                        _editItemId != null ? 'Save Changes' : 'Add Item',
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),

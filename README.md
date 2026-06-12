@@ -1,17 +1,36 @@
-# journey_joy
+# JourneyJoy
 
-A new Flutter project.
+Offline-first travel planner for trips, expenses, flights, activities, packing, and itinerary planning.
 
-## Getting Started
+## Sitemap Coverage (complete)
 
-This project is a starting point for a Flutter application.
+| Screen               | Status |
+|----------------------|--------|
+| Splash               | ✅     |
+| Welcome              | ✅     |
+| Register             | ✅     |
+| Login                | ✅     |
+| Home                 | ✅     |
+| Add Trip             | ✅     |
+| Trip Detail          | ✅     |
+| Expenses             | ✅     |
+| Flights              | ✅     |
+| Activities           | ✅     |
+| Documents            | ✅     |
+| Itinerary            | ✅     |
+| Trip Report          | ✅     |
+| Packing              | ✅     |
+| Settings             | ✅     |
 
-A few resources to get you started if this is your first Flutter project:
+## QA Status
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- **`flutter analyze`** — passes with no issues.
+- **`flutter test`** — 51 tests, all pass.
+- **Test file**: `test/qa_test.dart` covers providers, screens, currency formatting, and full-flow integration.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Remaining Notes
+
+- Splash screen test is skipped — requires `Firebase.initializeApp()` in test env (Firebase Auth).
+- App launch integration test is skipped for the same reason.
+- Firebase mocks (`firebase_core_platform_interface`) are wired for `AuthProvider`-dependent widget tests.
+- 3 uncommitted commits ahead of `origin/main`.

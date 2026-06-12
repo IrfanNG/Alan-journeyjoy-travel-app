@@ -8,7 +8,9 @@ import '../screens/document/document_screen.dart';
 import '../screens/expense/expense_screen.dart';
 import '../screens/flight/flight_screen.dart';
 import '../screens/home/home_screen.dart';
+import '../screens/itinerary/itinerary_screen.dart';
 import '../screens/packing/packing_screen.dart';
+import '../screens/report/trip_report_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/splash/splash_screen.dart';
 import '../screens/trip_detail/trip_detail_screen.dart';
@@ -27,6 +29,8 @@ class AppRoutes {
     '/flights': (_) => const FlightScreen(),
     '/activities': (_) => const ActivityScreen(),
     '/documents': (_) => const DocumentScreen(),
+    '/itinerary': (_) => const ItineraryScreen(),
+    '/report': (_) => const TripReportScreen(),
     '/packing': (_) => const PackingScreen(),
     '/settings': (_) => const SettingsScreen(),
   };

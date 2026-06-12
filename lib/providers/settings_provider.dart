@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../data/models/app_settings_model.dart';
 import '../data/services/local_storage_service.dart';
 import '../data/services/sync_service.dart';
+import '../services/notification_service.dart';
 
 class SettingsProvider extends ChangeNotifier {
   final SyncService? _syncService;
@@ -18,6 +19,8 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   bool get isDarkMode => _settings.darkModeEnabled;
+
+  bool get notificationsEnabled => _settings.notificationsEnabled;
 
   String get currencyCode => _settings.currencyCode;
 
@@ -43,6 +46,21 @@ class SettingsProvider extends ChangeNotifier {
       entityId: 'app',
       data: _settings.toMap(),
     );
+  }
+
+  void setNotificationsEnabled(bool value) {
+    _settings.notificationsEnabled = value;
+    _settings.updatedAt = DateTime.now();
+    LocalStorageService.saveSettings(_settings);
+    notifyListeners();
+    _syncService?.syncUpdate(
+      entityType: 'settings',
+      entityId: 'app',
+      data: _settings.toMap(),
+    );
+    if (!value) {
+      NotificationService.cancelAll();
+    }
   }
 
   void setCurrency(String code) {

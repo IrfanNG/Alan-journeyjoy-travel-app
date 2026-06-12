@@ -60,6 +60,29 @@ class PackingProvider extends ChangeNotifier {
     }
   }
 
+  void updateItem(String id, String name) {
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index == -1) return;
+    _items[index].name = name;
+    _items[index].updatedAt = DateTime.now();
+    LocalStorageService.savePackingItems(_items);
+    notifyListeners();
+    _syncService?.syncUpdate(
+      entityType: 'packing',
+      tripId: _items[index].tripId,
+      entityId: id,
+      data: _items[index].toMap(),
+    );
+  }
+
+  PackingItem? getItemById(String id) {
+    try {
+      return _items.firstWhere((i) => i.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
   void deleteItem(String id) {
     final index = _items.indexWhere((i) => i.id == id);
     if (index == -1) return;

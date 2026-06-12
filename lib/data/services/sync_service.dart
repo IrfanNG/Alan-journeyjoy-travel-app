@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../services/auth_service.dart';
 import '../models/activity_model.dart';
 import '../models/document_model.dart';
 import '../models/expense_model.dart';
 import '../models/flight_model.dart';
+import '../models/itinerary_day_model.dart';
 import '../models/packing_item_model.dart';
 import '../models/trip_model.dart';
 import 'local_storage_service.dart';
@@ -108,6 +110,7 @@ class SyncService {
     required String entityId,
     required Map<String, dynamic> data,
   }) async {
+    debugPrint('canSync=$canSync uid=$_uid online=$_isOnline entity=$entityType/$entityId');
     if (!canSync) {
       _addPendingChange('create', entityType, tripId, entityId, data);
       return;
@@ -122,7 +125,10 @@ class SyncService {
         await _remoteDataSource.createSubEntity(
             uid, tripId, entityType, data);
       }
-    } catch (_) {
+      debugPrint('Sync create succeeded: $entityType/$entityId');
+    } catch (e, st) {
+      debugPrint('Sync create failed: $entityType/$entityId -> $e');
+      debugPrintStack(stackTrace: st);
       _addPendingChange('create', entityType, tripId, entityId, data);
     }
   }
@@ -133,6 +139,7 @@ class SyncService {
     required String entityId,
     required Map<String, dynamic> data,
   }) async {
+    debugPrint('canSync=$canSync uid=$_uid online=$_isOnline entity=$entityType/$entityId');
     if (!canSync) {
       _addPendingChange('update', entityType, tripId, entityId, data);
       return;
@@ -147,7 +154,10 @@ class SyncService {
         await _remoteDataSource.updateSubEntity(
             uid, tripId, entityType, entityId, data);
       }
-    } catch (_) {
+      debugPrint('Sync update succeeded: $entityType/$entityId');
+    } catch (e, st) {
+      debugPrint('Sync update failed: $entityType/$entityId -> $e');
+      debugPrintStack(stackTrace: st);
       _addPendingChange('update', entityType, tripId, entityId, data);
     }
   }
@@ -157,6 +167,7 @@ class SyncService {
     String? tripId,
     required String entityId,
   }) async {
+    debugPrint('canSync=$canSync uid=$_uid online=$_isOnline entity=$entityType/$entityId');
     if (!canSync) {
       _addPendingChange('delete', entityType, tripId, entityId, null);
       return;
@@ -169,7 +180,10 @@ class SyncService {
         await _remoteDataSource.deleteSubEntity(
             uid, tripId, entityType, entityId);
       }
-    } catch (_) {
+      debugPrint('Sync delete succeeded: $entityType/$entityId');
+    } catch (e, st) {
+      debugPrint('Sync delete failed: $entityType/$entityId -> $e');
+      debugPrintStack(stackTrace: st);
       _addPendingChange('delete', entityType, tripId, entityId, null);
     }
   }
@@ -187,13 +201,19 @@ class SyncService {
   }
 
   Future<void> _processPendingChanges() async {
-    if (!canSync) return;
+    if (!canSync) {
+      debugPrint('_processPendingChanges: cannot sync');
+      return;
+    }
+    debugPrint('_processPendingChanges: starting');
     _status = SyncStatus.syncing;
     final rawChanges = LocalStorageService.getRawPendingChanges();
     if (rawChanges.isEmpty) {
+      debugPrint('_processPendingChanges: no pending changes');
       _status = SyncStatus.idle;
       return;
     }
+    debugPrint('_processPendingChanges: ${rawChanges.length} changes found');
     final changes = rawChanges.map(PendingChange.fromMap).toList();
     final uid = _uid!;
     for (final change in changes) {
@@ -227,19 +247,29 @@ class SyncService {
           }
         }
         LocalStorageService.removePendingChange(change.entityId);
-      } catch (_) {}
+        debugPrint('_processPendingChanges: resolved ${change.action} ${change.entityType}/${change.entityId}');
+      } catch (e, st) {
+        debugPrint('_processPendingChanges: failed ${change.action} ${change.entityType}/${change.entityId} -> $e');
+        debugPrintStack(stackTrace: st);
+      }
     }
     _status = SyncStatus.idle;
+    debugPrint('_processPendingChanges: complete');
   }
 
   Future<void> fetchAndMergeAll() async {
-    if (!canSync) return;
+    if (!canSync) {
+      debugPrint('fetchAndMergeAll: cannot sync');
+      return;
+    }
+    debugPrint('fetchAndMergeAll: starting');
     _status = SyncStatus.syncing;
     try {
       final uid = _uid!;
 
       final localTrips = LocalStorageService.getTrips();
       final remoteTrips = await _remoteDataSource.getAllTrips(uid);
+      debugPrint('fetchAndMergeAll: ${localTrips.length} local trips, ${remoteTrips.length} remote trips');
       final mergedTrips = _mergeLists<Trip>(
         localTrips.map((t) => t.toMap()).toList(),
         remoteTrips,
@@ -304,9 +334,68 @@ class SyncService {
           Document.fromMap,
           (list) => LocalStorageService.saveDocuments(list),
         );
+        await _mergeSubEntities<ItineraryDay>(
+          uid,
+          tid,
+          'itinerary',
+          LocalStorageService.getItineraryDays()
+              .where((d) => d.tripId == tid)
+              .map((d) => d.toMap())
+              .toList(),
+          ItineraryDay.fromMap,
+          (list) => LocalStorageService.saveItineraryDays(list),
+        );
       }
-    } catch (_) {}
+      debugPrint('fetchAndMergeAll: complete');
+    } catch (e, st) {
+      debugPrint('fetchAndMergeAll failed -> $e');
+      debugPrintStack(stackTrace: st);
+    }
     _status = SyncStatus.idle;
+  }
+
+  Future<void> pushLocalSnapshot() async {
+    if (!canSync) {
+      debugPrint('pushLocalSnapshot: cannot sync');
+      return;
+    }
+    debugPrint('pushLocalSnapshot: starting');
+    final uid = _uid!;
+
+    for (final trip in LocalStorageService.getTrips()) {
+      await _remoteDataSource.createTrip(uid, trip.toMap());
+      final tripId = trip.id;
+
+      for (final expense in LocalStorageService.getExpenses().where((e) => e.tripId == tripId)) {
+        await _remoteDataSource.createSubEntity(uid, tripId, 'expenses', expense.toMap());
+      }
+      for (final flight in LocalStorageService.getFlights().where((f) => f.tripId == tripId)) {
+        await _remoteDataSource.createSubEntity(uid, tripId, 'flights', flight.toMap());
+      }
+      for (final activity in LocalStorageService.getActivities().where((a) => a.tripId == tripId)) {
+        await _remoteDataSource.createSubEntity(uid, tripId, 'activities', activity.toMap());
+      }
+      for (final item in LocalStorageService.getPackingItems().where((p) => p.tripId == tripId)) {
+        await _remoteDataSource.createSubEntity(uid, tripId, 'packing', item.toMap());
+      }
+      for (final day in LocalStorageService.getItineraryDays().where((d) => d.tripId == tripId)) {
+        await _remoteDataSource.createSubEntity(uid, tripId, 'itinerary', day.toMap());
+      }
+    }
+
+    await _remoteDataSource.saveSettings(uid, LocalStorageService.getSettings().toMap());
+    debugPrint('pushLocalSnapshot: complete');
+  }
+
+  Future<void> syncNow() async {
+    debugPrint('syncNow: starting');
+    if (!canSync) {
+      debugPrint('syncNow: cannot sync');
+      return;
+    }
+    await _processPendingChanges();
+    await fetchAndMergeAll();
+    debugPrint('syncNow: complete');
   }
 
   List<T> _mergeLists<T>(

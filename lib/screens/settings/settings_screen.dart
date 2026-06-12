@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../app/theme.dart';
 import '../../core/widgets/jj_back_button.dart';
 import '../../core/widgets/jj_bottom_nav.dart';
+import '../../data/models/app_settings_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/trip_provider.dart';
@@ -17,25 +18,29 @@ class SettingsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: JJColors.lightBg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: JJColors.gradientPurple,
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 24,
+              right: 24,
+              bottom: 32,
+            ),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: JJColors.gradientPurple,
               ),
-              child: Column(
-                children: [
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(32),
+                bottomRight: Radius.circular(32),
+              ),
+            ),
+            child: Column(
+              children: [
                   Row(children: [const JJBackButton(), const Spacer()]),
                   const SizedBox(height: 16),
                   SizedBox(
@@ -118,7 +123,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    settingsProvider.settings.username ?? 'Settings',
+                    _displayName(context, settingsProvider.settings),
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -251,7 +256,7 @@ class SettingsScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                'Coming soon',
+                                'Trip and activity reminders',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: JJColors.textMuted,
@@ -260,33 +265,21 @@ class SettingsScreen extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const Icon(
-                          Icons.chevron_right,
-                          color: JJColors.textMuted,
-                          size: 20,
+                        Switch(
+                          value: settingsProvider.notificationsEnabled,
+                          onChanged: (v) =>
+                              settingsProvider.setNotificationsEnabled(v),
+                          activeThumbColor: JJColors.primaryPurple,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _sectionHeader('Support'),
-                  const SizedBox(height: 8),
-                  _visualTile(
-                    icon: Icons.help_outline,
-                    title: 'Help & Support',
-                    subtitle: 'Get help with using Journey Joy',
-                  ),
-                  const SizedBox(height: 8),
-                  _visualTile(
-                    icon: Icons.description_outlined,
-                    title: 'Terms & Privacy',
-                    subtitle: 'Read our terms and privacy policy',
-                  ),
-                  const SizedBox(height: 8),
-                  _visualTile(
+                  _settingTile(
                     icon: Icons.info_outline,
                     title: 'About Journey Joy',
                     subtitle: 'Version 1.0.0',
+                    onTap: () => _showAboutJourneyJoy(context),
                   ),
                   const SizedBox(height: 24),
                   _sectionHeader('Data'),
@@ -311,7 +304,6 @@ class SettingsScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
       bottomNavigationBar: JJBottomNav(
         currentTab: JJBottomNavTab.more,
         onCenterTap: () => Navigator.pushNamed(context, '/add-trip'),
@@ -441,65 +433,6 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _visualTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: JJColors.cardBg,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: JJColors.primaryPurple.withAlpha(10),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: JJColors.primaryPurple.withAlpha(20),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: JJColors.primaryPurple, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: JJColors.textDark,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: JJColors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(Icons.chevron_right, color: JJColors.textMuted, size: 20),
-        ],
-      ),
-    );
-  }
-
   void _showUsernameDialog(BuildContext context) {
     final controller = TextEditingController(
       text: context.read<SettingsProvider>().settings.username ?? '',
@@ -575,6 +508,31 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _showAboutJourneyJoy(BuildContext context) {
+    showAboutDialog(
+      context: context,
+      applicationName: 'Journey Joy',
+      applicationVersion: '1.0.0',
+      applicationIcon: const Icon(Icons.travel_explore, size: 48),
+      children: const [
+        Text(
+          'Journey Joy is an offline-first travel planner for trips, expenses, flights, activities, packing, and itinerary planning.',
+        ),
+      ],
+    );
+  }
+
+  String _displayName(BuildContext context, AppSettings settings) {
+    final localName = settings.username?.trim();
+    if (localName != null && localName.isNotEmpty) return localName;
+    final auth = context.read<AuthProvider>();
+    final fbName = auth.user?.displayName?.trim();
+    if (fbName != null && fbName.isNotEmpty) return fbName;
+    final email = auth.user?.email;
+    if (email != null && email.isNotEmpty) return email.split('@').first;
+    return 'Traveler';
   }
 
   void _confirmClear(BuildContext context) {

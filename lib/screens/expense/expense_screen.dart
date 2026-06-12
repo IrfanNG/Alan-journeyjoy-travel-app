@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme.dart';
@@ -19,6 +20,10 @@ class ExpenseScreen extends StatefulWidget {
 }
 
 class _ExpenseScreenState extends State<ExpenseScreen> {
+  DateTimeRange? _dateFilter;
+  bool _hasInitializedRange = false;
+  final Set<String> _expandedCategories = {};
+
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments;
@@ -29,11 +34,30 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       final tp = context.read<TripProvider>();
       tripId = tp.trips.isNotEmpty ? tp.trips.first.id : '';
     }
+
+    if (!_hasInitializedRange && tripId.isNotEmpty) {
+      final trip = context.read<TripProvider>().getTripById(tripId);
+      if (trip?.startDate != null && trip?.endDate != null) {
+        _dateFilter = DateTimeRange(
+          start: trip!.startDate!,
+          end: trip.endDate!,
+        );
+      }
+      _hasInitializedRange = true;
+    }
+
     final expenseProvider = context.watch<ExpenseProvider>();
     final settingsProvider = context.watch<SettingsProvider>();
-    final tripExpenses = expenseProvider.getExpensesForTrip(tripId);
-    final totalSpent = expenseProvider.getTotalForTrip(tripId);
-    final categoryTotals = expenseProvider.getCategoryTotals(tripId);
+    final allTripExpenses = expenseProvider.getExpensesForTrip(tripId);
+    final tripExpenses = _dateFilter != null
+        ? expenseProvider.getExpensesByDateRange(
+            tripId, _dateFilter!.start, _dateFilter!.end)
+        : allTripExpenses;
+    final totalSpent = tripExpenses.fold(0.0, (s, e) => s + e.amount);
+    final categoryTotals = <String, double>{};
+    for (final e in tripExpenses) {
+      categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + e.amount;
+    }
     final hasData = totalSpent > 0;
     final pt = MediaQuery.of(context).padding.top;
     final currency = currencyFromCode(settingsProvider.currencyCode);
@@ -254,86 +278,219 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  ...List.generate(categories.length, (index) {
-                    final catTotal = categoryTotals[categories[index]] ?? 0;
-                    final catColor = categoryColors[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: InkWell(
-                        onTap: tripExpenses.isNotEmpty
-                            ? () {
-                                final filtered = tripExpenses
-                                    .where(
-                                      (e) => e.category == categories[index],
-                                    )
-                                    .toList();
-                                if (filtered.isNotEmpty) {
-                                  _showExpenseItems(context, filtered, categories[index], currency, settingsProvider);
-                                }
-                              }
-                            : null,
-                        child: Container(
-                          height: 56,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: JJColors.primaryPurple.withAlpha(10),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _dateFilterChip(
+                          label: _dateFilterLabel(),
+                          onTap: () => _pickDateFilter(context),
+                        ),
+                      ),
+                      if (_dateFilter != null)
+                        GestureDetector(
+                          onTap: () => setState(() => _dateFilter = null),
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Icon(
+                              Icons.close,
+                              size: 18,
+                              color: JJColors.textMuted.withAlpha(150),
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: catColor.withAlpha(20),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(
-                                  _iconForCategory(categories[index]),
-                                  color: catColor,
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  displayLabels[index],
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: JJColors.textDark,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                currency.format(catTotal),
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: JJColors.textDark,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  color: JJColors.primaryPurple.withAlpha(16),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.chevron_right,
-                                  color: JJColors.primaryPurple.withAlpha(120),
-                                  size: 14,
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...List.generate(categories.length, (index) {
+                    final cat = categories[index];
+                    final catTotal = categoryTotals[cat] ?? 0;
+                    final catColor = categoryColors[index];
+                    final isExpanded = _expandedCategories.contains(cat);
+                    final catExpenses = tripExpenses
+                        .where((e) => e.category == cat)
+                        .toList();
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Column(
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                if (isExpanded) {
+                                  _expandedCategories.remove(cat);
+                                } else {
+                                  _expandedCategories.add(cat);
+                                }
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              height: 56,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: JJColors.primaryPurple.withAlpha(10),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: catColor.withAlpha(20),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(
+                                      _iconForCategory(cat),
+                                      color: catColor,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      displayLabels[index],
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: JJColors.textDark,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    currency.format(catTotal),
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: JJColors.textDark,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  AnimatedRotation(
+                                    turns: isExpanded ? 0.25 : 0,
+                                    duration: const Duration(milliseconds: 200),
+                                    child: Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        color: JJColors.primaryPurple.withAlpha(16),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.chevron_right,
+                                        color: JJColors.primaryPurple.withAlpha(120),
+                                        size: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (isExpanded)
+                            Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: JJColors.lightBg,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: JJColors.primaryPurple.withAlpha(8),
+                                ),
+                              ),
+                              child: catExpenses.isEmpty
+                                  ? const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 8),
+                                      child: Text(
+                                        'No expenses in this range',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: JJColors.textMuted,
+                                        ),
+                                      ),
+                                    )
+                                  : Column(
+                                      children: catExpenses.map((e) {
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 4),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      e.itemName,
+                                                      style: const TextStyle(
+                                                        fontSize: 14,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: JJColors.textDark,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 2),
+                                                    Text(
+                                                      DateFormat('MMM dd').format(e.createdAt),
+                                                      style: const TextStyle(
+                                                        fontSize: 11,
+                                                        color: JJColors.textMuted,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(right: 8),
+                                                child: Text(
+                                                  currency.format(e.amount),
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: JJColors.textDark,
+                                                  ),
+                                                ),
+                                              ),
+                                              IconButton(
+                                                onPressed: () => Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) => const AddExpenseScreen(),
+                                                    settings: RouteSettings(
+                                                      arguments: <String, dynamic>{
+                                                        'tripId': tripId,
+                                                        'expenseId': e.id,
+                                                      },
+                                                    ),
+                                                  ),
+                                                ),
+                                                icon: const Icon(
+                                                  Icons.edit_outlined,
+                                                  color: JJColors.textMuted,
+                                                  size: 16,
+                                                ),
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                              ),
+                                              IconButton(
+                                                onPressed: () => _confirmDeleteExpense(context, e.id),
+                                                icon: const Icon(
+                                                  Icons.delete_outline,
+                                                  color: JJColors.errorRed,
+                                                  size: 18,
+                                                ),
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                            ),
+                        ],
                       ),
                     );
                   }),
@@ -376,78 +533,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
           }
         },
       ),
-    );
-  }
-
-  void _showExpenseItems(
-    BuildContext context,
-    List<dynamic> expenses,
-    String category,
-    CurrencyOption currency,
-    SettingsProvider settingsProvider,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                category,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: JJColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 16),
-                      ...expenses.map(
-                (e) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          e.itemName,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: JJColors.textDark,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        currency.format(e.amount),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: JJColors.textDark,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => _confirmDeleteExpense(
-                          context,
-                          e.id,
-                        ),
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: JJColors.errorRed,
-                          size: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -557,6 +642,76 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         );
       },
     );
+  }
+
+  String _dateFilterLabel() {
+    if (_dateFilter == null) return 'All Time';
+    final startLabel = DateFormat('MMM dd').format(_dateFilter!.start);
+    final endLabel = DateFormat('MMM dd').format(_dateFilter!.end);
+    if (DateUtils.isSameDay(_dateFilter!.start, _dateFilter!.end)) {
+      return startLabel;
+    }
+    return '$startLabel - $endLabel';
+  }
+
+  Widget _dateFilterChip({
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: JJColors.primaryPurple.withAlpha(12),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: JJColors.primaryPurple.withAlpha(30),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.date_range,
+              size: 16,
+              color: JJColors.primaryPurple.withAlpha(180),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: JJColors.primaryPurple,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.arrow_drop_down,
+              size: 18,
+              color: JJColors.primaryPurple.withAlpha(150),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickDateFilter(BuildContext context) async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime.now().subtract(const Duration(days: 365 * 3)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDateRange: _dateFilter ??
+          DateTimeRange(
+            start: DateTime.now().subtract(const Duration(days: 30)),
+            end: DateTime.now(),
+          ),
+    );
+    if (picked != null) {
+      setState(() => _dateFilter = picked);
+    }
   }
 }
 

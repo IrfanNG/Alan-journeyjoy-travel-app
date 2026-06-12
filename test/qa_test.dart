@@ -1,11 +1,14 @@
 import 'dart:io';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 
 import 'package:journey_joy/app/routes.dart';
+import 'package:journey_joy/providers/auth_provider.dart';
 import 'package:journey_joy/data/models/currency_model.dart';
 import 'package:journey_joy/data/services/local_storage_service.dart';
 import 'package:journey_joy/providers/activity_provider.dart';
@@ -22,6 +25,11 @@ import 'package:journey_joy/screens/welcome/welcome_screen.dart';
 
 void main() {
   late Directory tempDir;
+
+  setUpAll(() async {
+    setupFirebaseCoreMocks();
+    await Firebase.initializeApp();
+  });
 
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp('journey_joy_qa');
@@ -62,30 +70,30 @@ void main() {
   // B. HOME
   // ============================================================
   group('B. Home', () {
-    testWidgets('B1. Home screen renders without errors', (tester) async {
-      await tester.pumpWidget(
-        ChangeNotifierProvider(
-          create: (_) => TripProvider()..loadTrips(),
-          child: MaterialApp(
-            home: const HomeScreen(),
-            routes: AppRoutes.routes,
-          ),
+    Widget homeWithProviders() {
+      return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => TripProvider()..loadTrips()),
+          ChangeNotifierProvider(create: (_) => ExpenseProvider()..loadExpenses()),
+          ChangeNotifierProvider(create: (_) => FlightProvider()..loadFlights()),
+          ChangeNotifierProvider(create: (_) => ActivityProvider()..loadActivities()),
+          ChangeNotifierProvider(create: (_) => SettingsProvider()..loadSettings()),
+        ],
+        child: MaterialApp(
+          home: const HomeScreen(),
+          routes: AppRoutes.routes,
         ),
       );
+    }
+
+    testWidgets('B1. Home screen renders without errors', (tester) async {
+      await tester.pumpWidget(homeWithProviders());
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('B2. Add Trip button visible', (tester) async {
-      await tester.pumpWidget(
-        ChangeNotifierProvider(
-          create: (_) => TripProvider()..loadTrips(),
-          child: MaterialApp(
-            home: const HomeScreen(),
-            routes: AppRoutes.routes,
-          ),
-        ),
-      );
+      await tester.pumpWidget(homeWithProviders());
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Add Trip'),
@@ -479,6 +487,25 @@ void main() {
       final reloaded = SettingsProvider()..loadSettings();
       expect(reloaded.currencyCode, 'EUR');
     });
+
+    test('I8. notificationsEnabled defaults to true', () {
+      final provider = SettingsProvider()..loadSettings();
+      expect(provider.notificationsEnabled, true);
+    });
+
+    test('I9. setNotificationsEnabled persists value', () {
+      final provider = SettingsProvider()..loadSettings();
+      expect(provider.notificationsEnabled, true);
+
+      provider.setNotificationsEnabled(false);
+      expect(provider.notificationsEnabled, false);
+
+      final reloaded = SettingsProvider()..loadSettings();
+      expect(reloaded.notificationsEnabled, false);
+
+      reloaded.setNotificationsEnabled(true);
+      expect(reloaded.notificationsEnabled, true);
+    });
   });
 
   // ============================================================
@@ -630,14 +657,38 @@ void main() {
   group('K. Settings Screen', () {
     testWidgets('K1. Settings screen renders', (tester) async {
       await tester.pumpWidget(
-        ChangeNotifierProvider(
-          create: (_) => SettingsProvider()..loadSettings(),
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => AuthProvider()),
+            ChangeNotifierProvider(create: (_) => SettingsProvider()..loadSettings()),
+          ],
           child: const MaterialApp(home: SettingsScreen()),
         ),
       );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(find.text('Dark Mode'), findsOneWidget);
+    });
+
+    testWidgets('K2. Header shows Traveler when no username set', (tester) async {
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => AuthProvider()),
+            ChangeNotifierProvider(create: (_) => SettingsProvider()..loadSettings()),
+          ],
+          child: const MaterialApp(home: SettingsScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Traveler'), findsOneWidget);
+    });
+
+    test('K3. SettingsProvider username is independent of AuthProvider', () {
+      final settings = SettingsProvider()..loadSettings();
+      expect(settings.settings.username, isNull);
+      settings.setUsername('Ahmad');
+      expect(settings.settings.username, 'Ahmad');
     });
   });
 

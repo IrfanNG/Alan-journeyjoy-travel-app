@@ -1,10 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthResult {
   final String? uid;
   final String? error;
-  AuthResult({this.uid, this.error});
+  final bool isEmailConflict;
+  AuthResult({this.uid, this.error, this.isEmailConflict = false});
   bool get isSuccess => uid != null && error == null;
 }
 
@@ -34,6 +36,15 @@ class AuthService {
       });
       return AuthResult(uid: cred.user!.uid);
     } on FirebaseAuthException catch (e) {
+      debugPrint('FirebaseAuthException code: ${e.code}');
+      debugPrint('FirebaseAuthException message: ${e.message}');
+      debugPrint('FirebaseAuthException plugin: ${e.plugin}');
+      if (e.code == 'email-already-in-use') {
+        return AuthResult(
+          error: 'Email already registered. Please login instead.',
+          isEmailConflict: true,
+        );
+      }
       return AuthResult(error: _mapAuthError(e.code));
     } catch (e) {
       return AuthResult(error: 'Something went wrong. Please try again.');
@@ -49,6 +60,7 @@ class AuthService {
         email: email.trim(),
         password: password,
       );
+      await _ensureUserDoc(cred.user!);
       return AuthResult(uid: cred.user!.uid);
     } on FirebaseAuthException catch (e) {
       return AuthResult(error: _mapAuthError(e.code));
@@ -59,6 +71,34 @@ class AuthService {
 
   Future<void> logout() async {
     await _auth.signOut();
+  }
+
+  Future<void> ensureUserDocExists(User user) async {
+    try {
+      await _ensureUserDoc(user);
+    } catch (_) {
+      // Silently fail; next sync cycle will retry.
+    }
+  }
+
+  Future<void> _ensureUserDoc(User user) async {
+    try {
+      final ref = _firestore.collection('users').doc(user.uid);
+      final snapshot = await ref.get();
+      final now = FieldValue.serverTimestamp();
+      if (snapshot.exists) {
+        await ref.set({'updatedAt': now}, SetOptions(merge: true));
+      } else {
+        await ref.set({
+          'name': user.displayName ?? user.email?.split('@').first ?? 'User',
+          if (user.email != null) 'email': user.email,
+          'createdAt': now,
+          'updatedAt': now,
+        }, SetOptions(merge: true));
+      }
+    } catch (_) {
+      // Silently fail.
+    }
   }
 
   String _mapAuthError(String code) {
@@ -77,6 +117,12 @@ class AuthService {
         return 'Please enter a valid email address.';
       case 'too-many-requests':
         return 'Too many attempts. Please try again later.';
+      case 'operation-not-allowed':
+        return 'Email/password sign-up is not enabled.';
+      case 'network-request-failed':
+        return 'Network error. Please check your connection.';
+      case 'internal-error':
+        return 'Firebase registration failed. Check Firebase Auth setup.';
       default:
         return code;
     }

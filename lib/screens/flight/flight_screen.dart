@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../app/theme.dart';
 import '../../core/widgets/jj_back_button.dart';
 import '../../core/widgets/jj_bottom_nav.dart';
+import '../../data/models/flight_model.dart';
 import '../../providers/flight_provider.dart';
 import '../../providers/trip_provider.dart';
 
@@ -19,6 +20,7 @@ class _FlightScreenState extends State<FlightScreen> {
   final _airlineController = TextEditingController();
   final _fromController = TextEditingController();
   final _toController = TextEditingController();
+  String? _editFlightId;
   @override
   void dispose() {
     _flightNoController.dispose();
@@ -196,9 +198,21 @@ class _FlightScreenState extends State<FlightScreen> {
                                       ),
                                     ),
                                   ],
-                                ),
                               ),
-                              IconButton(
+                            ),
+                            IconButton(
+                              onPressed: () => _openEditFlightSheet(
+                                context,
+                                tripId,
+                                flight,
+                              ),
+                              icon: const Icon(
+                                Icons.edit_outlined,
+                                color: JJColors.textMuted,
+                                size: 18,
+                              ),
+                            ),
+                            IconButton(
                                 onPressed: () =>
                                     _confirmDeleteFlight(context, flight.id),
                                 icon: const Icon(
@@ -271,8 +285,17 @@ class _FlightScreenState extends State<FlightScreen> {
     );
   }
 
+  void _openEditFlightSheet(BuildContext context, String tripId, Flight flight) {
+    _flightNoController.text = flight.flightNumber;
+    _airlineController.text = flight.airline ?? '';
+    _fromController.text = flight.fromLocation;
+    _toController.text = flight.toLocation;
+    _editFlightId = flight.id;
+    _openAddFlightSheet(context, tripId);
+  }
+
   Future<void> _openAddFlightSheet(BuildContext context, String tripId) async {
-    _clearFlightForm();
+    if (_editFlightId == null) _clearFlightForm();
 
     await showModalBottomSheet<void>(
       context: context,
@@ -306,9 +329,9 @@ class _FlightScreenState extends State<FlightScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Add Flight',
-                        style: TextStyle(
+                      Text(
+                        _editFlightId != null ? 'Edit Flight' : 'Add Flight',
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: JJColors.textDark,
@@ -374,9 +397,9 @@ class _FlightScreenState extends State<FlightScreen> {
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Add Flight',
-                        style: TextStyle(
+                      child: Text(
+                        _editFlightId != null ? 'Save Changes' : 'Add Flight',
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -430,15 +453,29 @@ class _FlightScreenState extends State<FlightScreen> {
       return;
     }
 
-    context.read<FlightProvider>().addFlight(
-      tripId,
-      flightNo,
-      airline.isEmpty ? null : airline,
-      from,
-      to,
-      DateTime.now(),
-      DateTime.now(),
-    );
+    final provider = context.read<FlightProvider>();
+    if (_editFlightId != null) {
+      final original = provider.getFlightById(_editFlightId!);
+      provider.updateFlight(
+        _editFlightId!,
+        flightNo,
+        airline.isEmpty ? null : airline,
+        from,
+        to,
+        original?.departureTime ?? DateTime.now(),
+        original?.arrivalTime ?? DateTime.now(),
+      );
+    } else {
+      provider.addFlight(
+        tripId,
+        flightNo,
+        airline.isEmpty ? null : airline,
+        from,
+        to,
+        DateTime.now(),
+        DateTime.now(),
+      );
+    }
     _clearFlightForm();
     Navigator.pop(sheetContext);
   }
@@ -448,6 +485,7 @@ class _FlightScreenState extends State<FlightScreen> {
     _airlineController.clear();
     _fromController.clear();
     _toController.clear();
+    _editFlightId = null;
   }
 
   Future<void> _confirmDeleteFlight(
