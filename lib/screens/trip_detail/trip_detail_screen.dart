@@ -44,7 +44,7 @@ class TripDetailScreen extends StatelessWidget {
 
     if (trip == null) {
       return Scaffold(
-        backgroundColor: JJColors.lightBg,
+        backgroundColor: context.jj.background,
         body: SafeArea(
           child: Center(
             child: Text(
@@ -70,7 +70,7 @@ class TripDetailScreen extends StatelessWidget {
     final packedCount = tripItems.where((i) => i.isPacked).length;
 
     return Scaffold(
-      backgroundColor: JJColors.lightBg,
+      backgroundColor: context.jj.background,
       body: Column(
         children: [
           SizedBox(
@@ -130,9 +130,9 @@ class TripDetailScreen extends StatelessWidget {
               offset: const Offset(0, -28),
               child: Container(
                 width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: JJColors.lightBg,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                decoration: BoxDecoration(
+                  color: context.jj.background,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                 ),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
@@ -141,8 +141,8 @@ class TripDetailScreen extends StatelessWidget {
                     children: [
                       Text(
                         trip.name,
-                        style: const TextStyle(
-                          color: JJColors.textDark,
+                        style: TextStyle(
+                          color: context.jj.text,
                           fontSize: 26,
                           fontWeight: FontWeight.w800,
                         ),
@@ -150,18 +150,18 @@ class TripDetailScreen extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         DateFormat('MMM dd, yyyy').format(trip.createdAt),
-                        style: const TextStyle(
-                          color: JJColors.textMuted,
+                        style: TextStyle(
+                          color: context.jj.muted,
                           fontSize: 14,
                         ),
                       ),
                       const SizedBox(height: 24),
                       _buildQuickActions(context, trip.id),
                       const SizedBox(height: 24),
-                      const Text(
+                      Text(
                         "What's Next?",
                         style: TextStyle(
-                          color: JJColors.textDark,
+                          color: context.jj.text,
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
@@ -169,11 +169,11 @@ class TripDetailScreen extends StatelessWidget {
                       const SizedBox(height: 14),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.jj.card,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: JJColors.primaryPurple.withAlpha(12),
+                              color: context.jj.shadow,
                               blurRadius: 20,
                               offset: const Offset(0, 6),
                             ),
@@ -369,7 +369,7 @@ class TripDetailScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isActive ? JJColors.primaryPurple : JJColors.textMuted,
+              color: isActive ? JJColors.primaryPurple : context.jj.muted,
             ),
           ),
         ],
@@ -404,10 +404,10 @@ class TripDetailScreen extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: JJColors.textDark,
+                  color: context.jj.text,
                 ),
               ),
             ),
@@ -601,7 +601,7 @@ Widget _datePickButton(
             size: 14,
             color: date != null
                 ? JJColors.primaryPurple
-                : JJColors.textMuted.withAlpha(120),
+                : context.jj.muted.withAlpha(120),
           ),
           const SizedBox(width: 6),
           Text(
@@ -610,8 +610,8 @@ Widget _datePickButton(
               fontSize: 13,
               fontWeight: FontWeight.w500,
               color: date != null
-                  ? JJColors.textDark
-                  : JJColors.textMuted.withAlpha(150),
+                  ? context.jj.text
+                  : context.jj.muted.withAlpha(150),
             ),
           ),
         ],

@@ -42,7 +42,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
     final docs = _filtered(allDocs);
 
     return Scaffold(
-      backgroundColor: JJColors.lightBg,
+      backgroundColor: context.jj.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -119,15 +119,15 @@ class _DocumentScreenState extends State<DocumentScreen> {
                               size: 56,
                               color: JJColors.primaryPurple.withAlpha(60)),
                           const SizedBox(height: 12),
-                          const Text('No documents yet',
+                          Text('No documents yet',
                               style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: JJColors.textDark)),
+                                  color: context.jj.text)),
                           const SizedBox(height: 4),
-                          const Text('Upload your travel documents here',
+                          Text('Upload your travel documents here',
                               style: TextStyle(
-                                  fontSize: 13, color: JJColors.textMuted)),
+                                  fontSize: 13, color: context.jj.muted)),
                         ],
                       ),
                     )
@@ -142,12 +142,11 @@ class _DocumentScreenState extends State<DocumentScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
-                              color: JJColors.cardBg,
+                              color: context.jj.card,
                               borderRadius: BorderRadius.circular(18),
                               boxShadow: [
                                 BoxShadow(
-                                    color:
-                                        JJColors.primaryPurple.withAlpha(10),
+                                    color: context.jj.shadow,
                                     blurRadius: 8,
                                     offset: const Offset(0, 2)),
                               ],
@@ -172,24 +171,24 @@ class _DocumentScreenState extends State<DocumentScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(doc.name,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
-                                              color: JJColors.textDark),
+                                              color: context.jj.text),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis),
                                       const SizedBox(height: 2),
                                       Text(doc.sizeFormatted,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               fontSize: 12,
-                                              color: JJColors.textMuted)),
+                                              color: context.jj.muted)),
                                     ],
                                   ),
                                 ),
                                 PopupMenuButton<String>(
                                   icon: Icon(Icons.more_vert,
                                       size: 20,
-                                      color: JJColors.textMuted.withAlpha(120)),
+                                      color: context.jj.muted.withAlpha(120)),
                                   onSelected: (value) {
                                     if (value == 'delete') {
                                       _confirmDelete(context, doc);
@@ -343,7 +342,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : JJColors.textMuted,
+              color: selected ? Colors.white : context.jj.muted,
             ),
           ),
         ),

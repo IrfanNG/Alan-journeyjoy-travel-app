@@ -15,7 +15,6 @@ class SettingsProvider extends ChangeNotifier {
 
   void loadSettings() {
     _settings = LocalStorageService.getSettings();
-    notifyListeners();
   }
 
   bool get isDarkMode => _settings.darkModeEnabled;

@@ -24,7 +24,7 @@ class JJCategoryChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? JJColors.primaryPurple : JJColors.cardBg,
+          color: selected ? JJColors.primaryPurple : context.jj.card,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected ? JJColors.primaryPurple : JJColors.primaryPurple.withAlpha(25),
@@ -54,7 +54,7 @@ class JJCategoryChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : JJColors.textDark,
+                color: selected ? Colors.white : context.jj.text,
               ),
             ),
           ],

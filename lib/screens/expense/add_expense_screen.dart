@@ -131,7 +131,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final currency = currencyFromCode(context.watch<SettingsProvider>().currencyCode);
     final isEditing = _editExpenseId != null;
     return Scaffold(
-      backgroundColor: JJColors.lightBg,
+      backgroundColor: context.jj.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -144,10 +144,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   Expanded(
                     child: Text(
                       isEditing ? 'Edit Expense' : 'Add Expense',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: JJColors.textDark,
+                        color: context.jj.text,
                       ),
                     ),
                   ),
@@ -174,12 +174,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Category',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: JJColors.textDark,
+                        color: context.jj.text,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -195,22 +195,22 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       ],
                     ),
                     const SizedBox(height: 28),
-                    const Text(
+                    Text(
                       'Description',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: JJColors.textDark,
+                        color: context.jj.text,
                       ),
                     ),
                     const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.jj.card,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: JJColors.primaryPurple.withAlpha(15),
+                          color: context.jj.border,
                         ),
                       ),
                       child: TextField(
@@ -218,10 +218,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         decoration: InputDecoration(
                           hintText: 'Optional note',
                           hintStyle: TextStyle(
-                            color: JJColors.textMuted.withAlpha(80),
+                            color: context.jj.muted.withAlpha(80),
                           ),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: context.jj.card,
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
                             vertical: 16,
@@ -230,22 +230,22 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       'Amount',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: JJColors.textDark,
+                        color: context.jj.text,
                       ),
                     ),
                     const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.jj.card,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: JJColors.primaryPurple.withAlpha(15),
+                          color: context.jj.border,
                         ),
                       ),
                       child: TextField(
@@ -254,10 +254,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         decoration: InputDecoration(
                           hintText: '${currency.symbol} 0${currency.hasDecimals ? '.00' : ''}' ,
                           hintStyle: TextStyle(
-                            color: JJColors.textMuted.withAlpha(80),
+                            color: context.jj.muted.withAlpha(80),
                           ),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: context.jj.card,
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
                             vertical: 16,
@@ -266,12 +266,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       'Date',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: JJColors.textDark,
+                        color: context.jj.text,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -282,26 +282,26 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           horizontal: 16,
                           vertical: 16,
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: JJColors.primaryPurple.withAlpha(15),
+                          decoration: BoxDecoration(
+                            color: context.jj.card,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: context.jj.border,
+                            ),
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                DateFormat(
-                                  'MMMM dd, yyyy',
-                                ).format(_selectedDate),
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  color: JJColors.textDark,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  DateFormat(
+                                    'MMMM dd, yyyy',
+                                  ).format(_selectedDate),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: context.jj.text,
+                                  ),
                                 ),
                               ),
-                            ),
                             Icon(
                               Icons.calendar_today,
                               color: JJColors.primaryPurple.withAlpha(120),
@@ -312,21 +312,21 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       'Note (Optional)',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: JJColors.textDark,
+                        color: context.jj.text,
                       ),
                     ),
                     const SizedBox(height: 10),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.jj.card,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: JJColors.primaryPurple.withAlpha(15),
+                          color: context.jj.border,
                         ),
                       ),
                       child: TextField(
@@ -335,10 +335,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         decoration: InputDecoration(
                           hintText: 'Add a note...',
                           hintStyle: TextStyle(
-                            color: JJColors.textMuted.withAlpha(80),
+                            color: context.jj.muted.withAlpha(80),
                           ),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: context.jj.card,
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.all(16),
                         ),
@@ -388,7 +388,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             width: 66,
             height: 66,
             decoration: BoxDecoration(
-              color: selected ? JJColors.primaryPurple : Colors.white,
+              color: selected ? JJColors.primaryPurple : context.jj.card,
               borderRadius: BorderRadius.circular(18),
               border: selected
                   ? null
@@ -406,7 +406,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: selected ? JJColors.primaryPurple : JJColors.textMuted,
+              color: selected ? JJColors.primaryPurple : context.jj.muted,
             ),
           ),
         ],

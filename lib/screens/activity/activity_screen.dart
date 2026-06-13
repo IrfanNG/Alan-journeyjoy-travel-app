@@ -67,7 +67,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             : activityProvider.getPastActivities(tripId);
 
     return Scaffold(
-      backgroundColor: JJColors.lightBg,
+      backgroundColor: context.jj.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -77,13 +77,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 children: [
                   const JJBackButton(variant: JJBackButtonVariant.purpleOnLight),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Activities',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: JJColors.textDark,
+                        color: context.jj.text,
                       ),
                     ),
                   ),
@@ -121,10 +121,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   decoration: InputDecoration(
                     hintText: 'Search activities...',
                     hintStyle: TextStyle(
-                      color: JJColors.textMuted.withAlpha(100),
+                      color: context.jj.muted.withAlpha(100),
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: context.jj.card,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide.none,
@@ -165,12 +165,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             color: JJColors.primaryPurple.withAlpha(60),
                           ),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'No activities yet',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: JJColors.textDark,
+                              color: context.jj.text,
                             ),
                           ),
                         ],
@@ -186,19 +186,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             _activityIcons[index % _activityIcons.length];
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: Container(
-                            height: 84,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: JJColors.primaryPurple.withAlpha(10),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
+                        child: Container(
+                          height: 84,
+                          decoration: BoxDecoration(
+                            color: context.jj.card,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: context.jj.shadow,
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
                             child: Row(
                               children: [
                                 Container(
@@ -235,10 +235,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                     children: [
                                       Text(
                                         activity.name,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: JJColors.textDark,
+                                          color: context.jj.text,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -249,16 +249,16 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                           Icon(
                                             Icons.schedule,
                                             size: 14,
-                                            color: JJColors.textMuted.withAlpha(
+                                            color: context.jj.muted.withAlpha(
                                               150,
                                             ),
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
                                             '${DateFormat('MMM dd').format(activity.date)}${activity.timeText != null ? ' · ${activity.timeText}' : ''}',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 12,
-                                              color: JJColors.textMuted,
+                                              color: context.jj.muted,
                                             ),
                                           ),
                                         ],
@@ -275,9 +275,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                       _selectedActivityDate = activity.date;
                                       setState(() => _showAdd = true);
                                     },
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.edit_outlined,
-                                      color: JJColors.textMuted,
+                                      color: context.jj.muted,
                                       size: 18,
                                     ),
                                   ),
@@ -391,9 +391,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 right: 24,
                 top: 24,
               ),
-              decoration: const BoxDecoration(
-                color: JJColors.cardBg,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: context.jj.card,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
                 ),
@@ -409,10 +409,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         _editActivityId != null
                             ? 'Edit Activity'
                             : 'Add Activity',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: JJColors.textDark,
+                          color: context.jj.text,
                         ),
                       ),
                       GestureDetector(
@@ -423,9 +423,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                           });
                           _controller.clear();
                         },
-                        child: const Icon(
+                        child: Icon(
                           Icons.close,
-                          color: JJColors.textMuted,
+                          color: context.jj.muted,
                         ),
                       ),
                     ],
@@ -437,10 +437,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     decoration: InputDecoration(
                       hintText: 'What are you planning?',
                       hintStyle: TextStyle(
-                        color: JJColors.textMuted.withAlpha(100),
+                        color: context.jj.muted.withAlpha(100),
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: context.jj.card,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -481,13 +481,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         horizontal: 16,
                         vertical: 14,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: JJColors.primaryPurple.withAlpha(15),
+                        decoration: BoxDecoration(
+                          color: context.jj.card,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: context.jj.border,
+                          ),
                         ),
-                      ),
                       child: Row(
                         children: [
                           Icon(
@@ -498,9 +498,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                           const SizedBox(width: 8),
                           Text(
                             DateFormat('MMM dd, yyyy').format(_selectedActivityDate),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
-                              color: JJColors.textDark,
+                              color: context.jj.text,
                             ),
                           ),
                         ],
@@ -588,7 +588,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : JJColors.textMuted,
+              color: selected ? Colors.white : context.jj.muted,
             ),
           ),
         ),

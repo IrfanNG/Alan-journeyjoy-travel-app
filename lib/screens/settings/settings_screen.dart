@@ -17,7 +17,7 @@ class SettingsScreen extends StatelessWidget {
     final settingsProvider = context.watch<SettingsProvider>();
 
     return Scaffold(
-      backgroundColor: JJColors.lightBg,
+      backgroundColor: context.jj.background,
       body: Column(
         children: [
           Container(
@@ -148,66 +148,71 @@ class SettingsScreen extends StatelessWidget {
                   vertical: 16,
                 ),
                 children: [
-                  _sectionHeader('Profile'),
-                  const SizedBox(height: 8),
-                  _settingTile(
-                    icon: Icons.person_outline,
+                    _sectionHeader(context, 'Profile'),
+                    const SizedBox(height: 8),
+                    _settingTile(context,
+                      icon: Icons.person_outline,
                     title: 'Username',
                     subtitle:
                         settingsProvider.settings.username ?? 'Set your name',
                     onTap: () => _showUsernameDialog(context),
                   ),
                   const SizedBox(height: 24),
-                  _sectionHeader('Preferences'),
+                  _sectionHeader(context, 'Preferences'),
                   const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
+                  GestureDetector(
+                    onTap: () => settingsProvider.setDarkMode(
+                      !settingsProvider.isDarkMode,
                     ),
-                    decoration: BoxDecoration(
-                      color: JJColors.cardBg,
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: JJColors.primaryPurple.withAlpha(10),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: JJColors.warningOrange.withAlpha(20),
-                            borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.jj.card,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: context.jj.shadow,
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                          child: const Icon(
-                            Icons.dark_mode_outlined,
-                            color: JJColors.warningOrange,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Text(
-                            'Dark Mode',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: JJColors.textDark,
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: JJColors.warningOrange.withAlpha(20),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.dark_mode_outlined,
+                              color: JJColors.warningOrange,
+                              size: 20,
                             ),
                           ),
-                        ),
-                        Switch(
-                          value: settingsProvider.isDarkMode,
-                          onChanged: (v) => settingsProvider.setDarkMode(v),
-                          activeThumbColor: JJColors.primaryPurple,
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Dark Mode',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: context.jj.text,
+                              ),
+                            ),
+                          ),
+                          Switch(
+                            value: settingsProvider.isDarkMode,
+                            onChanged: (v) => settingsProvider.setDarkMode(v),
+                            activeThumbColor: JJColors.primaryPurple,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -217,11 +222,11 @@ class SettingsScreen extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: JJColors.cardBg,
+                      color: context.jj.card,
                       borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
-                          color: JJColors.primaryPurple.withAlpha(10),
+                          color: context.jj.shadow,
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -243,7 +248,7 @@ class SettingsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -252,14 +257,14 @@ class SettingsScreen extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: JJColors.textDark,
+                                  color: context.jj.text,
                                 ),
                               ),
                               Text(
                                 'Trip and activity reminders',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: JJColors.textMuted,
+                                  color: context.jj.muted,
                                 ),
                               ),
                             ],
@@ -275,23 +280,23 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _settingTile(
+                  _settingTile(context,
                     icon: Icons.info_outline,
                     title: 'About Journey Joy',
                     subtitle: 'Version 1.0.0',
                     onTap: () => _showAboutJourneyJoy(context),
                   ),
                   const SizedBox(height: 24),
-                  _sectionHeader('Data'),
+                  _sectionHeader(context, 'Data'),
                   const SizedBox(height: 8),
-                  _settingTile(
+                  _settingTile(context,
                     icon: Icons.delete_outline,
                     title: 'Clear All Data',
                     subtitle: 'Remove all trips and data',
                     iconColor: JJColors.errorRed,
                     onTap: () => _confirmClear(context),
                   ),
-                  _settingTile(
+                  _settingTile(context,
                     icon: Icons.logout,
                     title: 'Sign Out',
                     subtitle: 'Sign out of your account',
@@ -346,7 +351,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _sectionHeader(String text) {
+  Widget _sectionHeader(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Text(
@@ -354,14 +359,15 @@ class SettingsScreen extends StatelessWidget {
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: JJColors.textMuted.withAlpha(150),
+          color: context.jj.muted.withAlpha(150),
           letterSpacing: 0.5,
         ),
       ),
     );
   }
 
-  Widget _settingTile({
+  Widget _settingTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -373,11 +379,11 @@ class SettingsScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: JJColors.cardBg,
+          color: context.jj.card,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: JJColors.primaryPurple.withAlpha(10),
+              color: context.jj.shadow,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -405,26 +411,26 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: JJColors.textDark,
+                      color: context.jj.text,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: JJColors.textMuted,
+                      color: context.jj.muted,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
-              color: JJColors.textMuted,
+              color: context.jj.muted,
               size: 20,
             ),
           ],
@@ -447,8 +453,9 @@ class SettingsScreen extends StatelessWidget {
           autofocus: true,
           decoration: InputDecoration(
             hintText: 'Enter your name',
+            hintStyle: TextStyle(color: context.jj.muted.withAlpha(100)),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: context.jj.card,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,

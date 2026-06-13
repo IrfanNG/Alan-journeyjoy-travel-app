@@ -25,11 +25,11 @@ class JJSettingTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: JJColors.cardBg,
+        color: context.jj.card,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: JJColors.primaryPurple.withAlpha(10),
+            color: context.jj.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -52,20 +52,20 @@ class JJSettingTile extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: JJColors.textDark,
+            color: context.jj.text,
           ),
         ),
         subtitle: subtitle != null
             ? Text(
                 subtitle!,
-                style: const TextStyle(fontSize: 12, color: JJColors.textMuted),
+                style: TextStyle(fontSize: 12, color: context.jj.muted),
               )
             : null,
         trailing: trailing ?? (onTap != null
-            ? const Icon(Icons.chevron_right, color: JJColors.textMuted)
+            ? Icon(Icons.chevron_right, color: context.jj.muted)
             : null),
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

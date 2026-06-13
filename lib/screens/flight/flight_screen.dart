@@ -117,20 +117,20 @@ class _FlightScreenState extends State<FlightScreen> {
                             color: JJColors.primaryPurple.withAlpha(80),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          Text(
                             'No flights added',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
-                              color: JJColors.textDark,
+                              color: context.jj.text,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'Add your flight details below',
                             style: TextStyle(
                               fontSize: 14,
-                              color: JJColors.textMuted,
+                              color: context.jj.muted,
                             ),
                           ),
                         ],
@@ -150,16 +150,16 @@ class _FlightScreenState extends State<FlightScreen> {
                             horizontal: 16,
                             vertical: 14,
                           ),
-                          decoration: BoxDecoration(
-                            color: JJColors.cardBg,
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: JJColors.primaryPurple.withAlpha(10),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                            decoration: BoxDecoration(
+                              color: context.jj.card,
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: context.jj.shadow,
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                           ),
                           child: Row(
                             children: [
@@ -183,18 +183,18 @@ class _FlightScreenState extends State<FlightScreen> {
                                   children: [
                                     Text(
                                       '${flight.airline ?? ''} ${flight.flightNumber}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: JJColors.textDark,
+                                        color: context.jj.text,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       '${flight.fromLocation} → ${flight.toLocation}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 12,
-                                        color: JJColors.textMuted,
+                                        color: context.jj.muted,
                                       ),
                                     ),
                                   ],
@@ -206,9 +206,9 @@ class _FlightScreenState extends State<FlightScreen> {
                                 tripId,
                                 flight,
                               ),
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.edit_outlined,
-                                color: JJColors.textMuted,
+                                color: context.jj.muted,
                                 size: 18,
                               ),
                             ),
@@ -315,9 +315,9 @@ class _FlightScreenState extends State<FlightScreen> {
                 24,
                 MediaQuery.of(sheetContext).padding.bottom + 24,
               ),
-              decoration: const BoxDecoration(
-                color: JJColors.cardBg,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: context.jj.card,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
                 ),
@@ -331,10 +331,10 @@ class _FlightScreenState extends State<FlightScreen> {
                     children: [
                       Text(
                         _editFlightId != null ? 'Edit Flight' : 'Add Flight',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: JJColors.textDark,
+                          color: context.jj.text,
                         ),
                       ),
                       IconButton(
@@ -342,9 +342,9 @@ class _FlightScreenState extends State<FlightScreen> {
                           _clearFlightForm();
                           Navigator.pop(sheetContext);
                         },
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.close,
-                          color: JJColors.textMuted,
+                          color: context.jj.muted,
                         ),
                       ),
                     ],
@@ -425,9 +425,9 @@ class _FlightScreenState extends State<FlightScreen> {
       controller: controller,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: TextStyle(color: JJColors.textMuted.withAlpha(100)),
+        hintStyle: TextStyle(color: context.jj.muted.withAlpha(100)),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.jj.card,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,

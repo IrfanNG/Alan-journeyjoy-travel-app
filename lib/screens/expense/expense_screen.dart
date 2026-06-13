@@ -79,7 +79,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: JJColors.lightBg,
+      backgroundColor: context.jj.background,
       body: Stack(
         children: [
           Positioned(
@@ -105,7 +105,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
             top: 120,
             child: ClipPath(
               clipper: const _ExpenseWhiteBodyClipper(),
-              child: Container(color: JJColors.lightBg),
+              child: Container(color: context.jj.background),
             ),
           ),
           Positioned(top: pt + 18, left: 24, child: const JJBackButton()),
@@ -258,10 +258,10 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                               ),
                                               Text(
                                                 currency.format(catTotal),
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
+                              color: context.jj.card,
                                                 ),
                                               ),
                                             ],
@@ -293,9 +293,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                           child: Padding(
                             padding: const EdgeInsets.only(left: 8),
                             child: Icon(
-                              Icons.close,
-                              size: 18,
-                              color: JJColors.textMuted.withAlpha(150),
+Icons.close,
+                          size: 18,
+                          color: context.jj.muted.withAlpha(150),
                             ),
                           ),
                         ),
@@ -329,10 +329,10 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                               height: 56,
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: context.jj.card,
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color: JJColors.primaryPurple.withAlpha(10),
+                                  color: context.jj.border,
                                 ),
                               ),
                               child: Row(
@@ -354,19 +354,19 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                   Expanded(
                                     child: Text(
                                       displayLabels[index],
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
-                                        color: JJColors.textDark,
+                                        color: context.jj.text,
                                       ),
                                     ),
                                   ),
                                   Text(
                                     currency.format(catTotal),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w700,
-                                      color: JJColors.textDark,
+                                      color: context.jj.text,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -396,20 +396,20 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                               margin: const EdgeInsets.only(top: 4),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: JJColors.lightBg,
+                                color: context.jj.background,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: JJColors.primaryPurple.withAlpha(8),
                                 ),
                               ),
                               child: catExpenses.isEmpty
-                                  ? const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
+                                  ? Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
                                       child: Text(
                                         'No expenses in this range',
                                         style: TextStyle(
                                           fontSize: 13,
-                                          color: JJColors.textMuted,
+                                          color: context.jj.muted,
                                         ),
                                       ),
                                     )
@@ -425,18 +425,18 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                                   children: [
                                                     Text(
                                                       e.itemName,
-                                                      style: const TextStyle(
+                                                      style: TextStyle(
                                                         fontSize: 14,
                                                         fontWeight: FontWeight.w500,
-                                                        color: JJColors.textDark,
+                                                        color: context.jj.text,
                                                       ),
                                                     ),
                                                     const SizedBox(height: 2),
                                                     Text(
                                                       DateFormat('MMM dd').format(e.createdAt),
-                                                      style: const TextStyle(
+                                                      style: TextStyle(
                                                         fontSize: 11,
-                                                        color: JJColors.textMuted,
+                                                        color: context.jj.muted,
                                                       ),
                                                     ),
                                                   ],
@@ -446,10 +446,10 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                                 padding: const EdgeInsets.only(right: 8),
                                                 child: Text(
                                                   currency.format(e.amount),
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w600,
-                                                    color: JJColors.textDark,
+                                                    color: context.jj.text,
                                                   ),
                                                 ),
                                               ),
@@ -466,9 +466,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                                     ),
                                                   ),
                                                 ),
-                                                icon: const Icon(
+                                                icon: Icon(
                                                   Icons.edit_outlined,
-                                                  color: JJColors.textMuted,
+                                                  color: context.jj.muted,
                                                   size: 16,
                                                 ),
                                                 padding: EdgeInsets.zero,
@@ -599,35 +599,35 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Select Currency',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: JJColors.textDark,
+               Text(
+                 'Select Currency',
+                 style: TextStyle(
+                   fontSize: 18,
+                   fontWeight: FontWeight.bold,
+                   color: context.jj.text,
                 ),
               ),
               const SizedBox(height: 16),
               ...supportedCurrencies.map((c) => ListTile(
                 leading: Text(
                   c.symbol,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: JJColors.textDark,
+                    color: context.jj.text,
                   ),
                 ),
                 title: Text(
                   '${c.code} - ${c.name}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: JJColors.textDark,
+                    color: context.jj.text,
                   ),
                 ),
                 subtitle: Text(
                   c.country,
-                  style: const TextStyle(fontSize: 12, color: JJColors.textMuted),
+                  style: TextStyle(fontSize: 12, color: context.jj.muted),
                 ),
                 trailing: settingsProvider.currencyCode == c.code
                     ? const Icon(Icons.check, color: JJColors.primaryPurple)

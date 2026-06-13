@@ -31,11 +31,11 @@ class JJTripCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: JJColors.cardBg,
+          color: context.jj.card,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: JJColors.primaryPurple.withAlpha(12),
+              color: context.jj.shadow,
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -65,18 +65,18 @@ class JJTripCard extends StatelessWidget {
                   children: [
                     Text(
                       trip.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: JJColors.textDark,
+                        color: context.jj.text,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Created $dateStr',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: JJColors.textMuted,
+                        color: context.jj.muted,
                       ),
                     ),
                   ],

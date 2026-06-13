@@ -25,11 +25,11 @@ class JJModuleCard extends StatelessWidget {
       onTap: enabled ? onTap : null,
       child: Container(
         decoration: BoxDecoration(
-          color: JJColors.cardBg,
+          color: context.jj.card,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: JJColors.primaryPurple.withAlpha(15),
+              color: context.jj.shadow,
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -54,7 +54,7 @@ class JJModuleCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: enabled ? JJColors.textDark : JJColors.textMuted,
+                color: enabled ? context.jj.text : context.jj.muted,
               ),
               textAlign: TextAlign.center,
             ),

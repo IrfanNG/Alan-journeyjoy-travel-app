@@ -34,7 +34,7 @@ class _ItineraryScreenState extends State<ItineraryScreen> {
     final tripActivities = activityProvider.getActivitiesForTrip(tripId);
 
     return Scaffold(
-      backgroundColor: JJColors.lightBg,
+      backgroundColor: context.jj.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -155,19 +155,19 @@ class _ItineraryScreenState extends State<ItineraryScreen> {
               color: JJColors.primaryPurple.withAlpha(80),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'No dates set',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: JJColors.textDark,
+                color: context.jj.text,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Set your trip dates to see\nyour day-by-day itinerary',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: JJColors.textMuted),
+              style: TextStyle(fontSize: 14, color: context.jj.muted),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -351,11 +351,11 @@ class _DayCardState extends State<_DayCard> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         decoration: BoxDecoration(
-          color: JJColors.cardBg,
+          color: context.jj.card,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: JJColors.primaryPurple.withAlpha(10),
+              color: context.jj.shadow,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -392,17 +392,17 @@ class _DayCardState extends State<_DayCard> {
                     children: [
                       Text(
                         'Day ${widget.dayNumber}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: JJColors.textDark,
+                          color: context.jj.text,
                         ),
                       ),
                       Text(
                         '$weekday · $formatted',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: JJColors.textMuted,
+                          color: context.jj.muted,
                         ),
                       ),
                     ],
@@ -417,7 +417,7 @@ class _DayCardState extends State<_DayCard> {
                   'Nothing planned yet',
                   style: TextStyle(
                     fontSize: 13,
-                    color: JJColors.textMuted.withAlpha(150),
+                    color: context.jj.muted.withAlpha(150),
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -432,19 +432,19 @@ class _DayCardState extends State<_DayCard> {
                         Expanded(
                           child: Text(
                             a.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: JJColors.textDark,
+                              color: context.jj.text,
                             ),
                           ),
                         ),
                         if (a.timeText != null)
                           Text(
                             a.timeText!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: JJColors.textMuted,
+                              color: context.jj.muted,
                             ),
                           ),
                       ],
@@ -455,7 +455,7 @@ class _DayCardState extends State<_DayCard> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Row(
                   children: [
-                    Icon(Icons.notes, size: 14, color: JJColors.textMuted.withAlpha(120)),
+                    Icon(Icons.notes, size: 14, color: context.jj.muted.withAlpha(120)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: _editingNotes
@@ -467,7 +467,7 @@ class _DayCardState extends State<_DayCard> {
                                 isDense: true,
                                 contentPadding: EdgeInsets.zero,
                               ),
-                              style: const TextStyle(fontSize: 13, color: JJColors.textDark),
+                              style: TextStyle(fontSize: 13, color: context.jj.text),
                               onSubmitted: (v) {
                                 widget.onNotesSaved(
                                     v.trim().isEmpty ? null : v.trim());
@@ -478,9 +478,9 @@ class _DayCardState extends State<_DayCard> {
                               onTap: () => setState(() => _editingNotes = true),
                               child: Text(
                                 widget.itineraryDay?.notes ?? '',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: JJColors.textDark,
+                                  color: context.jj.text,
                                   fontStyle: FontStyle.italic,
                                 ),
                               ),
@@ -522,11 +522,11 @@ class _DayCardState extends State<_DayCard> {
                       onPressed: () => setState(() => _editingNotes = true),
                       icon: Icon(Icons.edit_note,
                           size: 16,
-                          color: JJColors.textMuted.withAlpha(150)),
+                          color: context.jj.muted.withAlpha(150)),
                       label: const Text('Notes',
                           style: TextStyle(fontSize: 13)),
                       style: TextButton.styleFrom(
-                        foregroundColor: JJColors.textMuted,
+                        foregroundColor: context.jj.muted,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         minimumSize: Size.zero,
@@ -538,11 +538,11 @@ class _DayCardState extends State<_DayCard> {
                       onPressed: () => setState(() => _editingNotes = true),
                       icon: Icon(Icons.edit_note,
                           size: 16,
-                          color: JJColors.textMuted.withAlpha(150)),
+                          color: context.jj.muted.withAlpha(150)),
                       label: const Text('Add Notes',
                           style: TextStyle(fontSize: 13)),
                       style: TextButton.styleFrom(
-                        foregroundColor: JJColors.textMuted,
+                        foregroundColor: context.jj.muted,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         minimumSize: Size.zero,

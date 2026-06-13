@@ -42,7 +42,7 @@ class TripReportScreen extends StatelessWidget {
     final pastActivities = activityProvider.getPastActivities(tripId);
 
     return Scaffold(
-      backgroundColor: JJColors.lightBg,
+      backgroundColor: context.jj.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -113,25 +113,25 @@ class TripReportScreen extends StatelessWidget {
                   : ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
-                        _summaryCard(
+                        _summaryCard(context,
                           title: 'Expenses',
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 currency.format(totalSpent),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.w800,
-                                  color: JJColors.textDark,
+                                  color: context.jj.text,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 '${tripExpenses.length} expense${tripExpenses.length == 1 ? '' : 's'} across ${categoryTotals.length} categor${categoryTotals.length == 1 ? 'y' : 'ies'}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: JJColors.textMuted,
+                                  color: context.jj.muted,
                                 ),
                               ),
                               if (totalSpent > 0 && trip.startDate != null && trip.endDate != null)
@@ -153,16 +153,16 @@ class TripReportScreen extends StatelessWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: _summaryCard(
+                              child: _summaryCard(context,
                                 title: 'Activities',
                                 child: Column(
                                   children: [
                                     Text(
                                       '${tripActivities.length}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.w800,
-                                        color: JJColors.textDark,
+                                        color: context.jj.text,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -176,9 +176,9 @@ class TripReportScreen extends StatelessWidget {
                                     ),
                                     Text(
                                       '${pastActivities.length} past',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 13,
-                                        color: JJColors.textMuted,
+                                        color: context.jj.muted,
                                       ),
                                     ),
                                   ],
@@ -187,24 +187,24 @@ class TripReportScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: _summaryCard(
+                              child: _summaryCard(context,
                                 title: 'Packing',
                                 child: Column(
                                   children: [
                                     Text(
                                       '${(progress * 100).toStringAsFixed(0)}%',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.w800,
-                                        color: JJColors.textDark,
+                                        color: context.jj.text,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       '$packedCount/${tripItems.length} packed',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 13,
-                                        color: JJColors.textMuted,
+                                        color: context.jj.muted,
                                       ),
                                     ),
                                     if (tripItems.isNotEmpty)
@@ -230,23 +230,23 @@ class TripReportScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _summaryCard(
+                        _summaryCard(context,
                           title: 'Flights',
                           child: Text(
                             '${tripFlights.length} flight${tripFlights.length == 1 ? '' : 's'}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: JJColors.textDark,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: context.jj.text,
                             ),
                           ),
                         ),
                         if (tripExpenses.isNotEmpty) ...[
                           const SizedBox(height: 12),
-                          _summaryCard(
+                          _summaryCard(context,
                             title: 'Top Categories',
                             child: Column(
-                              children: _sortedCategoryWidgets(
+                              children: _sortedCategoryWidgets(context,
                                   currency, categoryTotals),
                             ),
                           ),
@@ -287,6 +287,7 @@ class TripReportScreen extends StatelessWidget {
   }
 
   List<Widget> _sortedCategoryWidgets(
+    BuildContext context,
     CurrencyOption currency,
     Map<String, double> categoryTotals,
   ) {
@@ -299,18 +300,18 @@ class TripReportScreen extends StatelessWidget {
           Expanded(
             child: Text(
               e.key,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: JJColors.textDark,
+                color: context.jj.text,
               ),
             ),
           ),
           Text(
             currency.format(e.value),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: JJColors.textDark,
+              color: context.jj.text,
             ),
           ),
         ],
@@ -318,7 +319,8 @@ class TripReportScreen extends StatelessWidget {
     )).toList();
   }
 
-  Widget _summaryCard({
+  Widget _summaryCard(
+    BuildContext context, {
     required String title,
     required Widget child,
   }) {
@@ -326,11 +328,11 @@ class TripReportScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: JJColors.cardBg,
+        color: context.jj.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: JJColors.primaryPurple.withAlpha(10),
+            color: context.jj.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -341,10 +343,10 @@ class TripReportScreen extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: JJColors.textMuted,
+              color: context.jj.muted,
             ),
           ),
           const SizedBox(height: 8),

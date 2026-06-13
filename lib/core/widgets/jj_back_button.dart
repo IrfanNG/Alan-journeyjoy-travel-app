@@ -10,11 +10,13 @@ enum JJBackButtonVariant {
 class JJBackButton extends StatelessWidget {
   final VoidCallback? onTap;
   final JJBackButtonVariant variant;
+  final String fallbackRoute;
 
   const JJBackButton({
     super.key,
     this.onTap,
     this.variant = JJBackButtonVariant.lightOnDark,
+    this.fallbackRoute = '/home',
   });
 
   @override
@@ -22,7 +24,13 @@ class JJBackButton extends StatelessWidget {
     final isLight = variant == JJBackButtonVariant.purpleOnLight;
 
     return GestureDetector(
-      onTap: onTap ?? () => Navigator.pop(context),
+      onTap: onTap ?? () {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        } else {
+          Navigator.pushReplacementNamed(context, fallbackRoute);
+        }
+      },
       child: Container(
         width: 46,
         height: 46,

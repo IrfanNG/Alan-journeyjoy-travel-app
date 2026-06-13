@@ -48,11 +48,11 @@ class JJBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: JJColors.cardBg,
+        color: context.jj.card,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: JJColors.primaryPurple.withAlpha(15),
+            color: context.jj.shadow,
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -118,7 +118,7 @@ class JJBottomNav extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: selected ? JJColors.primaryPurple : JJColors.textMuted,
+              color: selected ? JJColors.primaryPurple : context.jj.muted,
               size: 22,
             ),
             const SizedBox(height: 2),
@@ -127,7 +127,7 @@ class JJBottomNav extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                color: selected ? JJColors.primaryPurple : JJColors.textMuted,
+                color: selected ? JJColors.primaryPurple : context.jj.muted,
               ),
             ),
           ],

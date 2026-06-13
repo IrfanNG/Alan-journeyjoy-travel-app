@@ -59,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const bodyTop = 238.0;
     const gridTop = 420.0;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F7FF),
+      backgroundColor: context.jj.background,
       body: Consumer<TripProvider>(
         builder: (context, tripProvider, _) {
           final trips = tripProvider.trips;
@@ -100,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     top: bodyTop,
                     child: ClipPath(
                       clipper: const _HomeWhiteBodyClipper(),
-                      child: Container(color: const Color(0xFFF8F7FF)),
+                      child: Container(color: context.jj.background),
                     ),
                   ),
                   Positioned(
@@ -766,30 +766,30 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x155B2BEA),
-                  blurRadius: 12,
-                  offset: Offset(0, 4),
-                ),
-              ],
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: context.jj.card,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: context.jj.shadow,
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: JJColors.primaryPurple, size: 28),
             ),
-            child: Icon(icon, color: const Color(0xFF5B2BEA), size: 28),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF130B3A),
-            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: context.jj.text,
+              ),
             textAlign: TextAlign.center,
           ),
         ],

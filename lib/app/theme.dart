@@ -224,3 +224,22 @@ class AppTheme {
     ),
   );
 }
+
+extension JJTheme on BuildContext {
+  JJThemeColors get jj => JJThemeColors(this);
+}
+
+class JJThemeColors {
+  final BuildContext context;
+  JJThemeColors(this.context);
+
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get background => _isDark ? const Color(0xFF0D0D1A) : JJColors.lightBg;
+  Color get card => _isDark ? const Color(0xFF1A1A2E) : JJColors.cardBg;
+  Color get text => _isDark ? Colors.white : JJColors.textDark;
+  Color get muted => _isDark ? Colors.white54 : JJColors.textMuted;
+  Color get softSurface => _isDark ? const Color(0xFF1A1A2E) : JJColors.lightPurpleBg;
+  Color get border => _isDark ? const Color(0xFF2A2A3E) : JJColors.primaryPurple.withAlpha(25);
+  Color get shadow => _isDark ? Colors.black38 : JJColors.primaryPurple.withAlpha(15);
+}

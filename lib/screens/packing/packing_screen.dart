@@ -39,7 +39,7 @@ class _PackingScreenState extends State<PackingScreen> {
     final progress = packingProvider.getProgress(tripId);
 
     return Scaffold(
-      backgroundColor: JJColors.lightBg,
+      backgroundColor: context.jj.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -151,20 +151,20 @@ class _PackingScreenState extends State<PackingScreen> {
                             color: JJColors.primaryPurple.withAlpha(80),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          Text(
                             'Nothing packed yet',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
-                              color: JJColors.textDark,
+                              color: context.jj.text,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'Add items to your packing list',
                             style: TextStyle(
                               fontSize: 14,
-                              color: JJColors.textMuted,
+                              color: context.jj.muted,
                             ),
                           ),
                         ],
@@ -185,11 +185,11 @@ class _PackingScreenState extends State<PackingScreen> {
                             vertical: 14,
                           ),
                           decoration: BoxDecoration(
-                            color: JJColors.cardBg,
+                              color: context.jj.card,
                             borderRadius: BorderRadius.circular(18),
                             boxShadow: [
                               BoxShadow(
-                                color: JJColors.primaryPurple.withAlpha(10),
+                                color: context.jj.shadow,
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -207,13 +207,13 @@ class _PackingScreenState extends State<PackingScreen> {
                                   decoration: BoxDecoration(
                                     color: item.isPacked
                                         ? JJColors.successGreen
-                                        : JJColors.lightBg,
+                                        : context.jj.background,
                                     borderRadius: BorderRadius.circular(8),
                                     border: item.isPacked
                                         ? null
                                         : Border.all(
                                             color:
-                                                JJColors.textMuted.withAlpha(60),
+                                                context.jj.muted.withAlpha(60),
                                             width: 1.5,
                                           ),
                                   ),
@@ -234,8 +234,8 @@ class _PackingScreenState extends State<PackingScreen> {
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                     color: item.isPacked
-                                        ? JJColors.textMuted
-                                        : JJColors.textDark,
+                                        ? context.jj.muted
+                                        : context.jj.text,
                                     decoration: item.isPacked
                                         ? TextDecoration.lineThrough
                                         : null,
@@ -248,9 +248,9 @@ class _PackingScreenState extends State<PackingScreen> {
                                   _controller.text = item.name;
                                   setState(() => _showAdd = true);
                                 },
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.edit_outlined,
-                                  color: JJColors.textMuted,
+                                  color: context.jj.muted,
                                   size: 18,
                                 ),
                               ),
@@ -347,9 +347,9 @@ class _PackingScreenState extends State<PackingScreen> {
                 right: 24,
                 top: 24,
               ),
-              decoration: const BoxDecoration(
-                color: JJColors.cardBg,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: context.jj.card,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
                 ),
@@ -363,10 +363,10 @@ class _PackingScreenState extends State<PackingScreen> {
                     children: [
                       Text(
                         _editItemId != null ? 'Edit Item' : 'Add Item',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: JJColors.textDark,
+                          color: context.jj.text,
                         ),
                       ),
                       GestureDetector(
@@ -377,9 +377,9 @@ class _PackingScreenState extends State<PackingScreen> {
                           });
                           _controller.clear();
                         },
-                        child: const Icon(
+                        child: Icon(
                           Icons.close,
-                          color: JJColors.textMuted,
+                          color: context.jj.muted,
                         ),
                       ),
                     ],
@@ -391,10 +391,10 @@ class _PackingScreenState extends State<PackingScreen> {
                     decoration: InputDecoration(
                       hintText: 'What do you need?',
                       hintStyle: TextStyle(
-                        color: JJColors.textMuted.withAlpha(100),
+                        color: context.jj.muted.withAlpha(100),
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: context.jj.card,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,

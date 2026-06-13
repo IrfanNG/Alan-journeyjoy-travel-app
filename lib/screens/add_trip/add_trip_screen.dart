@@ -54,7 +54,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
   Widget build(BuildContext context) {
     final pt = MediaQuery.of(context).padding.top;
     return Scaffold(
-      backgroundColor: JJColors.lightBg,
+      backgroundColor: context.jj.background,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -77,7 +77,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
             top: 80 + pt,
             child: ClipPath(
               clipper: _AddTripWhiteSheetClipper(),
-              child: Container(color: JJColors.lightBg),
+              child: Container(color: context.jj.background),
             ),
           ),
           Positioned(top: pt + 18, left: 24, child: const JJBackButton()),
@@ -97,57 +97,57 @@ class _AddTripScreenState extends State<AddTripScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Center(
+                  Center(
                     child: Text(
                       'New Adventure',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: JJColors.textDark,
+                        color: context.jj.text,
                         letterSpacing: -0.2,
                       ),
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Center(
+                  Center(
                     child: Text(
                       'Name your trip',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: JJColors.textMuted,
+                        color: context.jj.muted,
                       ),
                     ),
                   ),
                   const SizedBox(height: 34),
-                  const Text(
+                  Text(
                     'Trip Name',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: JJColors.textDark,
+                      color: context.jj.text,
                     ),
                   ),
                   const SizedBox(height: 10),
                   _TripNameField(controller: _nameController),
                   const SizedBox(height: 28),
-                  const Text(
+                  Text(
                     'Pick a Color',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: JJColors.textDark,
+                      color: context.jj.text,
                     ),
                   ),
                   const SizedBox(height: 14),
                   _buildColorPicker(),
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'Trip Dates',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: JJColors.textDark,
+                      color: context.jj.text,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -228,9 +228,9 @@ class _AddTripScreenState extends State<AddTripScreen> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(230),
+        color: context.jj.card.withAlpha(230),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: JJColors.primaryPurple.withAlpha(16)),
+        border: Border.all(color: context.jj.border),
         boxShadow: [
           BoxShadow(
             color: JJColors.primaryPurple.withAlpha(10),
@@ -284,9 +284,9 @@ class _AddTripScreenState extends State<AddTripScreen> {
       child: Container(
         height: 52,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.jj.card,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: JJColors.primaryPurple.withAlpha(20)),
+          border: Border.all(color: context.jj.border),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -296,7 +296,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
               size: 14,
               color: date != null
                   ? JJColors.primaryPurple
-                  : JJColors.textMuted.withAlpha(120),
+                  : context.jj.muted.withAlpha(120),
             ),
             const SizedBox(width: 6),
             Text(
@@ -305,8 +305,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: date != null
-                    ? JJColors.textDark
-                    : JJColors.textMuted.withAlpha(150),
+                    ? context.jj.text
+                    : context.jj.muted.withAlpha(150),
               ),
             ),
           ],
@@ -350,9 +350,9 @@ class _TripNameField extends StatelessWidget {
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jj.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: JJColors.primaryPurple.withAlpha(20)),
+        border: Border.all(color: context.jj.border),
         boxShadow: [
           BoxShadow(
             color: JJColors.primaryPurple.withAlpha(10),
@@ -368,11 +368,11 @@ class _TripNameField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: 'Enter trip name',
           hintStyle: TextStyle(
-            color: JJColors.textMuted.withAlpha(145),
+            color: context.jj.muted.withAlpha(145),
             fontSize: 14,
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: context.jj.card,
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
