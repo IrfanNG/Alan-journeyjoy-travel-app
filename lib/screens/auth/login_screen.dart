@@ -40,8 +40,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
     if (!mounted) return;
     if (success) {
-      context.read<SettingsProvider>().markWelcomeSeen();
+      final settings = context.read<SettingsProvider>();
       Navigator.pushReplacementNamed(context, '/home');
+      Future.microtask(() {
+        settings.markWelcomeSeen();
+        auth.syncAfterLogin();
+      });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error ?? 'Login failed')),

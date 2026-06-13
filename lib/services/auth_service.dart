@@ -60,7 +60,6 @@ class AuthService {
         email: email.trim(),
         password: password,
       );
-      await _ensureUserDoc(cred.user!);
       return AuthResult(uid: cred.user!.uid);
     } on FirebaseAuthException catch (e) {
       return AuthResult(error: _mapAuthError(e.code));

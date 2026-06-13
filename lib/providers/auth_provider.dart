@@ -15,6 +15,8 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.uninitialized;
   bool _isLoading = false;
   bool _isRegistering = false;
+  bool _isManualLoginInProgress = false;
+  bool _isPostLoginSyncing = false;
   String? _error;
   bool _isEmailConflict = false;
 
@@ -38,7 +40,7 @@ class AuthProvider extends ChangeNotifier {
         : AuthStatus.unauthenticated;
     _isLoading = false;
     notifyListeners();
-    if (user != null && !_isRegistering) {
+    if (user != null && !_isRegistering && !_isManualLoginInProgress && !_isPostLoginSyncing) {
       await _authService.ensureUserDocExists(user);
       await _clearLocalDataIfDifferentUser(user.uid);
       await _syncService?.syncNow();
@@ -83,28 +85,46 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _error = null;
+    _isManualLoginInProgress = true;
     notifyListeners();
 
-    final result = await _authService.loginWithEmail(
-      email: email,
-      password: password,
-    );
+    try {
+      final result = await _authService.loginWithEmail(
+        email: email,
+        password: password,
+      );
 
-    _isLoading = false;
-    if (result.isSuccess) {
-      _user = _authService.currentUser;
-      if (_user != null) {
-        await _clearLocalDataIfDifferentUser(_user!.uid);
+      _isLoading = false;
+      if (result.isSuccess) {
+        _user = _authService.currentUser;
+        if (_user != null) {
+          await _clearLocalDataIfDifferentUser(_user!.uid);
+        }
+        _status = AuthStatus.authenticated;
+        _isPostLoginSyncing = true;
+        notifyListeners();
+        return true;
+      } else {
+        _error = result.error;
+        notifyListeners();
+        return false;
       }
-      _status = AuthStatus.authenticated;
+    } finally {
+      _isManualLoginInProgress = false;
+    }
+  }
+
+  Future<void> syncAfterLogin() async {
+    try {
+      if (_user != null) {
+        await _authService.ensureUserDocExists(_user!);
+      }
       await _syncService?.syncNow();
       await _onAfterSync?.call();
-      notifyListeners();
-      return true;
-    } else {
-      _error = result.error;
-      notifyListeners();
-      return false;
+    } catch (e) {
+      debugPrint('syncAfterLogin error: $e');
+    } finally {
+      _isPostLoginSyncing = false;
     }
   }
 
